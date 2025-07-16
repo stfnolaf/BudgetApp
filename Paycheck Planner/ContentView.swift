@@ -23,8 +23,8 @@ struct ContentView: View {
                 .tabItem { Label("Overview", systemImage: "house") }
             BudgetView(viewModel: viewModel, selectedTab: $selectedTab)
                 .tabItem { Label("Budget", systemImage: "list.bullet.rectangle") }
-            SpendView()
-                .tabItem { Label("Spend", systemImage: "creditcard") }
+            ExpenseView()
+                .tabItem { Label("Track", systemImage: "creditcard") }
             GrowView()
                 .tabItem { Label("Grow", systemImage: "chart.bar") }
             ProfileView()
