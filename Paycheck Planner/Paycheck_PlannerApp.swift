@@ -14,7 +14,7 @@ struct Paycheck_PlannerApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ContentView(modelContext: container.mainContext)
+            ContentView()
         }
         .modelContainer(container)
     }

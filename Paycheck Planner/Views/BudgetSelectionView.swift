@@ -6,46 +6,62 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct BudgetSelectionView: View {
-    let budgets: [Budget]
-    let onSelect: (Budget) -> Void
-    let onAddBudget: (Budget) -> Void
+    @Query var budgets: [Budget]
+    
+    @Environment(\.modelContext) private var modelContext
+    @Environment(AppState.self) private var appState
     
     @State private var showAddBudgetAlert = false
     @State private var newBudgetName = ""
     
     var body: some View {
-        NavigationView {
+        VStack {
+            HStack {
+                Text("Select a Budget")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Spacer()
+                Button {
+                    showAddBudgetAlert = true
+                } label: {
+                    Image(systemName: "plus")
+                }
+            }
+            .padding([.top, .horizontal])
             List(budgets) { budget in
-                Button(action: { onSelect(budget) }) {
+                Button{
+                    
+                } label: {
                     Text(budget.name)
                 }
             }
-            .navigationTitle("Select a Budget")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {
-                        showAddBudgetAlert = true
-                    }) {
-                        Image(systemName: "plus")
-                    }
-                }
-            }
-            .alert("New Expense List", isPresented: $showAddBudgetAlert, actions: {
-                TextField("List Name", text: $newBudgetName)
-                Button("Create", action: {
-                    let newBudget = Budget(newBudgetName)
-                    onAddBudget(newBudget)
-                    newBudgetName = ""
-                    showAddBudgetAlert = false
-                    onSelect(newBudget)
-                })
-                Button("Cancel", role: .cancel, action: {
-                    newBudgetName = ""
-                    showAddBudgetAlert = false
-                })
-            })
         }
+        .alert("New Budget", isPresented: $showAddBudgetAlert, actions: {
+            TextField("List Name", text: $newBudgetName)
+            Button("Create", action: {
+                let newBudget = Budget(newBudgetName)
+                modelContext.insert(newBudget)
+                newBudgetName = ""
+                showAddBudgetAlert = false
+                appState.workingBudget = newBudget
+            })
+            Button("Cancel", role: .cancel, action: {
+                newBudgetName = ""
+                showAddBudgetAlert = false
+            })
+        })
     }
+}
+
+#Preview {
+    let previewAppState = AppState()
+    let container = try! ModelContainer(for: Budget.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+    let context = ModelContext(container)
+    return BudgetSelectionView()
+        .environment(previewAppState)
+        .modelContext(context)
 }

@@ -22,8 +22,11 @@ final class Expense {
     @Attribute(.unique) var id: UUID
     var category: String
     var amount: Double
-    var title: String
+    @Attribute(.unique) var title: String
     var frequency: Frequency
+    
+    @Relationship(inverse: \Budget.expenses)
+    var list: Budget?
 
     init(
         id: UUID = UUID(),
@@ -43,10 +46,12 @@ final class Expense {
 @Model
 final class Budget {
     @Attribute(.unique) var id: UUID
-    var name: String
-    static let defaultExpenseCategories = ["Rent", "Utilities", "Transportation", "Insurance", "Groceries", "Splurge", "Smile"]
+    @Attribute(.unique) var name: String
+    static let defaultExpenseCategories = ["Rent", "Utilities", "Subscriptions", "Transportation", "Groceries", "Splurge", "Smile"]
 
     var expenseCategories: [String]
+    
+    @Relationship
     var expenses: [Expense]
     
     init(

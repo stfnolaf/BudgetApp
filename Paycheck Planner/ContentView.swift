@@ -9,37 +9,80 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
-    @State private var viewModel: ViewModel
+    @Query var budgets: [Budget]
+    @Query var incomes: [Income]
     
+    @State var appState = AppState()
+    
+    private static let lastWorkingBudgetIDKey = "lastWorkingBudgetID"
+        
     enum Tab: Hashable {
-        case overview, spend, save, invest, settings
+        case overview, budget, track, grow, profile
     }
     
     @State private var selectedTab: Tab = .overview
     
     var body: some View {
-        TabView {
+        TabView(selection: $selectedTab) {
             OverviewView()
-                .tabItem { Label("Overview", systemImage: "house") }
-            BudgetView(viewModel: viewModel, selectedTab: $selectedTab)
+                .tabItem { Label("Overview", systemImage: "chart.pie") }
+                .tag(Tab.overview)
+            BudgetView(selectedTab: $selectedTab)
                 .tabItem { Label("Budget", systemImage: "list.bullet.rectangle") }
+                .tag(Tab.budget)
             ExpenseView()
                 .tabItem { Label("Track", systemImage: "creditcard") }
+                .tag(Tab.track)
             GrowView()
                 .tabItem { Label("Grow", systemImage: "chart.bar") }
+                .tag(Tab.grow)
             ProfileView()
                 .tabItem { Label("Profile", systemImage: "person.crop.circle") }
+                .tag(Tab.profile)
+        }
+        .onAppear() {
+            fetchLastWorkingBudget()
+        }
+        .onChange(of: appState.workingBudget) {
+            if let newID = appState.workingBudget?.id {
+                UserDefaults.standard.set(newID.uuidString, forKey: Self.lastWorkingBudgetIDKey)
+            } else {
+                UserDefaults.standard.removeObject(forKey: Self.lastWorkingBudgetIDKey)
+            }
         }
     }
     
-    init(modelContext: ModelContext) {
-        let viewModel = ViewModel(modelContext: modelContext)
-        _viewModel = State(initialValue: viewModel)
+    init() {
+        fetchLastWorkingBudget()
+        fetchLastWorkingIncome()
+    }
+    
+    func fetchLastWorkingBudget() {
+        let savedID = UserDefaults.standard.string(forKey: Self.lastWorkingBudgetIDKey)
+        let matched = budgets.first(where: { $0.id.uuidString == savedID })
+        if let matchedBudget = matched {
+            appState.workingBudget = matchedBudget
+        } else {
+            appState.workingBudget = budgets.first
+        }
+    }
+    
+    func fetchLastWorkingIncome() {
+        
     }
 }
 
 #Preview {
-    let container = try! ModelContainer(for: Expense.self, Budget.self, Income.self, configurations: .init(isStoredInMemoryOnly: true))
-    let context = container.mainContext
-    return ContentView(modelContext: context)
+    var rent = Expense(category: "Rent", amount: 3500, title: "Rent", frequency: .monthly)
+    var groceries = Expense(category: "Groceries", amount: 300, title: "Food", frequency: .monthly)
+    var internet = Expense(category: "Utilities", amount: 80, title: "Internet", frequency: .monthly)
+    let previewAppState = AppState()
+    var budget = Budget("My Budget", expenses: [rent, groceries, internet])
+    let container = try! ModelContainer(for: Budget.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+    let context = ModelContext(container)
+    context.insert(budget)
+    previewAppState.workingBudget = budget
+    return ContentView()
+        .environment(previewAppState)
+        .modelContext(context)
 }
