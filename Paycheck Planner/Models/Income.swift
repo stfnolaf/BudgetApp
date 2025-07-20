@@ -11,7 +11,7 @@ import SwiftData
 final class Income {
     @Attribute(.unique) var id: UUID
     
-    var incomeName: String
+    var name: String
     
     var annualGrossIncome: Double
 
@@ -28,7 +28,7 @@ final class Income {
 
     init(
         id: UUID = UUID(),
-        incomeName: String = "",
+        name: String = "",
         annualGrossIncome: Double = 0.0,
         pctContribPreTax401k: Double = 0.0,
         pctEmployerMatch401k: Double = 0.0,
@@ -39,7 +39,7 @@ final class Income {
         pctContribESPP: Double = 0.0,
     ) {
         self.id = id
-        self.incomeName = incomeName
+        self.name = name
         self.annualGrossIncome = annualGrossIncome
         self.pctContribPreTax401k = pctContribPreTax401k
         self.pctEmployerMatch401k = pctEmployerMatch401k

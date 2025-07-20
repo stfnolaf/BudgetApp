@@ -138,40 +138,42 @@ struct BudgetView: View {
 
     var body: some View {
         NavigationStack {
-            HStack {
-                Text(appState.workingBudget?.name ?? "")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding([.top, .horizontal])
-                Spacer()
-                NavigationLink(destination: BudgetSelectionView()) {
-                    Image(systemName: "list.bullet")
-                }
-                .padding([.top, .horizontal])
-            }
-            if let budget = appState.workingBudget {
-                BudgetEditingView(budget: budget)
-            } else {
-                VStack {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack {
+                    Text(appState.workingBudget?.name ?? "")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding([.top, .horizontal])
                     Spacer()
-                    Text("No budgets created yet!")
-                    Button(action: {
-
-                    }) {
-                        HStack {
-                            Image(systemName: "plus.circle.fill")
-                            Text("New Budget")
-                                .fontWeight(.semibold)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.accentColor.opacity(0.15))
-                        .cornerRadius(12)
+                    NavigationLink(destination: BudgetSelectionView()) {
+                        Image(systemName: "list.bullet")
                     }
-                    .padding()
-                    Spacer()
+                    .padding([.top, .horizontal])
                 }
+                Spacer()
+                if let budget = appState.workingBudget {
+                    BudgetEditingView(budget: budget)
+                } else {
+                    VStack {
+                        Text("No budgets created yet!")
+                        Button(action: {
+
+                        }) {
+                            HStack {
+                                Image(systemName: "plus.circle.fill")
+                                Text("New Budget")
+                                    .fontWeight(.semibold)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.accentColor.opacity(0.15))
+                            .cornerRadius(12)
+                        }
+                        .padding()
+                    }
+                }
+                Spacer()
             }
         }
     }

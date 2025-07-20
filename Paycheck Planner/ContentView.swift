@@ -36,12 +36,13 @@ struct ContentView: View {
             GrowView()
                 .tabItem { Label("Grow", systemImage: "chart.bar") }
                 .tag(Tab.grow)
-            ProfileView()
+            ProfileView(selectedTab: $selectedTab)
                 .tabItem { Label("Profile", systemImage: "person.crop.circle") }
                 .tag(Tab.profile)
         }
         .onAppear() {
             fetchLastWorkingBudget()
+            fetchLastWorkingIncome()
         }
         .onChange(of: appState.workingBudget) {
             if let newID = appState.workingBudget?.id {
@@ -78,7 +79,7 @@ struct ContentView: View {
     var internet = Expense(category: "Utilities", amount: 80, title: "Internet", frequency: .monthly)
     let previewAppState = AppState()
     var budget = Budget("My Budget", expenses: [rent, groceries, internet])
-    let container = try! ModelContainer(for: Budget.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+    let container = try! ModelContainer(for: Budget.self, Income.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
     let context = ModelContext(container)
     context.insert(budget)
     previewAppState.workingBudget = budget
