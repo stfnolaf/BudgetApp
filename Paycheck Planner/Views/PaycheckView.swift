@@ -90,6 +90,7 @@ struct IncomeEditingView: View {
                 TextField("Gross Annual Salary", value: $income.annualGrossIncome, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
                     .keyboardType(.decimalPad)
                     .multilineTextAlignment(.trailing)
+                    .frame(maxWidth: 100)
             }
             
             Picker("State of Residence", selection: $selectedState) {
@@ -111,11 +112,13 @@ struct IncomeEditingView: View {
                     TextField("Annual Contribution", value: $income.dollarContribHSA, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
                         .keyboardType(.decimalPad)
                         .multilineTextAlignment(.trailing)
+                        .frame(maxWidth: 100)
                 }
                 LabeledContent("Employer Contribution") {
                     TextField("Employer Contribution", value: $income.dollarEmployerContribHSA, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
                         .keyboardType(.decimalPad)
                         .multilineTextAlignment(.trailing)
+                        .frame(maxWidth: 100)
                 }
             }
             
@@ -127,7 +130,7 @@ struct IncomeEditingView: View {
     }
 }
 
-struct ProfileView: View {
+struct PaycheckView: View {
     @Binding var selectedTab: ContentView.Tab
     
     @Environment(AppState.self) var appState
@@ -154,13 +157,13 @@ struct ProfileView: View {
                     IncomeEditingView(income: income)
                 } else {
                     VStack {
-                        Text("No income set up yet!")
+                        Text("No paycheck set up yet!")
                         Button(action: {
 
                         }) {
                             HStack {
                                 Image(systemName: "plus.circle.fill")
-                                Text("Set Up Income")
+                                Text("New Paycheck")
                                     .fontWeight(.semibold)
                             }
                             .frame(maxWidth: .infinity)
@@ -180,8 +183,8 @@ struct ProfileView: View {
 #Preview {
     @Previewable @State var selectedTab: ContentView.Tab = .budget
     let previewAppState = AppState()
-    let income = Income(name: "AMD Day Job")
+    let income = Income("AMD Day Job")
     previewAppState.workingIncome = income
-    return ProfileView(selectedTab: $selectedTab)
+    return PaycheckView(selectedTab: $selectedTab)
         .environment(previewAppState)
 }

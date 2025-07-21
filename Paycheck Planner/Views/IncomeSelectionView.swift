@@ -15,7 +15,7 @@ struct IncomeSelectionView: View {
     @Environment(AppState.self) private var appState
     
     @State private var showAddBudgetAlert = false
-    @State private var newBudgetName = ""
+    @State private var newIncomeName = ""
     
     var body: some View {
         VStack {
@@ -41,16 +41,16 @@ struct IncomeSelectionView: View {
             }
         }
         .alert("New Income", isPresented: $showAddBudgetAlert, actions: {
-            TextField("List Name", text: $newBudgetName)
+            TextField("List Name", text: $newIncomeName)
             Button("Create", action: {
-                let newBudget = Budget(newBudgetName)
-                modelContext.insert(newBudget)
-                newBudgetName = ""
+                let newIncome = Income(newIncomeName)
+                modelContext.insert(newIncome)
+                newIncomeName = ""
                 showAddBudgetAlert = false
-                appState.workingBudget = newBudget
+                appState.workingIncome = newIncome
             })
             Button("Cancel", role: .cancel, action: {
-                newBudgetName = ""
+                newIncomeName = ""
                 showAddBudgetAlert = false
             })
         })

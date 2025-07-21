@@ -28,8 +28,8 @@ final class Income {
     var pctESPPDiscount: Double
 
     init(
+        _ name: String,
         id: UUID = UUID(),
-        name: String = "",
         annualGrossIncome: Double = 0.0,
         pctContribPreTax401k: Double = 0.0,
         pctEmployerMatch401k: Double = 0.0,
