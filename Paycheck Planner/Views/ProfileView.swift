@@ -6,11 +6,124 @@
 //
 
 import SwiftUI
+import SwiftData
+
+struct PickerWheelSummoner: View {
+    let title: String
+    @Binding var currentValue: Double
+    @State private var isShowingPicker = false
+    var body: some View {
+        Button(action: { isShowingPicker = true }) {
+            HStack {
+                Text(title)
+                    .foregroundStyle(.primary)
+                Spacer()
+                Text(String(format: "%.0f%%", currentValue * 100))
+                    .foregroundStyle(.selection)
+            }
+        }
+        .buttonStyle(.plain)
+        .sheet(isPresented: $isShowingPicker) {
+            VStack {
+                Text("Select \(title)")
+                    .font(.headline)
+                    .padding()
+                Picker(title, selection: $currentValue) {
+                    ForEach(0..<101) { pct in
+                        Text("\(pct)%").tag(Double(pct) / 100.0)
+                    }
+                }
+                .pickerStyle(.wheel)
+                .labelsHidden()
+                Button("Done") {
+                    isShowingPicker = false
+                }
+                .padding()
+            }
+            .presentationDetents([.medium, .large])
+        }
+    }
+}
+
+struct ExpandableSection<Content: View>: View {
+    let title: String
+    @ViewBuilder let content: () -> Content
+    
+    @State private var isExpanded: Bool = false
+    
+    var body: some View {
+        Section(header:
+            Button(action: { isExpanded.toggle() }) {
+                HStack {
+                    Text(title)
+                    Spacer()
+                    Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
+                }
+            }
+            .buttonStyle(.plain)
+        ) {
+            if isExpanded {
+                VStack(alignment: .leading, spacing: 32) {
+                    content()
+                }
+                .padding(.leading)
+            }
+        }
+    }
+}
 
 struct IncomeEditingView: View {
-    let income: Income
+    @Bindable var income: Income
+    
+    @State private var selectedState: String = "CA" // default to California
+    let usStates = [
+        "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
+        "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
+        "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
+        "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
+        "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"
+    ]
+    
     var body: some View {
-        Text("Hello World")
+        Form {
+            LabeledContent("Gross Annual Salary") {
+                TextField("Gross Annual Salary", value: $income.annualGrossIncome, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
+                    .keyboardType(.decimalPad)
+                    .multilineTextAlignment(.trailing)
+            }
+            
+            Picker("State of Residence", selection: $selectedState) {
+                ForEach(usStates, id: \.self) { state in
+                    Text(state)
+                }
+            }
+            .pickerStyle(.menu)
+            .padding(.vertical, 4)
+            
+            ExpandableSection(title: "401k Options") {
+                PickerWheelSummoner(title: "Pre-Tax Contribution", currentValue: $income.pctContribPreTax401k)
+                PickerWheelSummoner(title: "Employer Match", currentValue: $income.pctEmployerMatch401k)
+                PickerWheelSummoner(title: "Employer Match Limit", currentValue: $income.pctEmployerMatchMax401k)
+            }
+            
+            ExpandableSection(title: "HSA Options") {
+                LabeledContent("Annual Contribution") {
+                    TextField("Annual Contribution", value: $income.dollarContribHSA, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
+                        .keyboardType(.decimalPad)
+                        .multilineTextAlignment(.trailing)
+                }
+                LabeledContent("Employer Contribution") {
+                    TextField("Employer Contribution", value: $income.dollarEmployerContribHSA, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
+                        .keyboardType(.decimalPad)
+                        .multilineTextAlignment(.trailing)
+                }
+            }
+            
+            ExpandableSection(title: "ESPP Options") {
+                PickerWheelSummoner(title: "Percent Withheld", currentValue: $income.pctContribESPP)
+                PickerWheelSummoner(title: "Discount", currentValue: $income.pctESPPDiscount)
+            }
+        }
     }
 }
 
@@ -47,7 +160,7 @@ struct ProfileView: View {
                         }) {
                             HStack {
                                 Image(systemName: "plus.circle.fill")
-                                Text("New Income")
+                                Text("Set Up Income")
                                     .fontWeight(.semibold)
                             }
                             .frame(maxWidth: .infinity)
@@ -67,7 +180,7 @@ struct ProfileView: View {
 #Preview {
     @Previewable @State var selectedTab: ContentView.Tab = .budget
     let previewAppState = AppState()
-    var income = Income(name: "My Income")
+    let income = Income(name: "AMD Day Job")
     previewAppState.workingIncome = income
     return ProfileView(selectedTab: $selectedTab)
         .environment(previewAppState)

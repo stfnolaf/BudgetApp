@@ -11,10 +11,12 @@ import SwiftData
 @main
 struct Paycheck_PlannerApp: App {
     let container: ModelContainer
+    var appState = AppState()
     
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(appState)
         }
         .modelContainer(container)
     }

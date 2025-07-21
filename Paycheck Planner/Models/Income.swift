@@ -25,6 +25,7 @@ final class Income {
     var dollarMiscPreTaxDeductions: Double
 
     var pctContribESPP: Double
+    var pctESPPDiscount: Double
 
     init(
         id: UUID = UUID(),
@@ -37,6 +38,7 @@ final class Income {
         dollarEmployerContribHSA: Double = 0.0,
         dollarMiscPreTaxDeductions: Double = 0.0,
         pctContribESPP: Double = 0.0,
+        pctESPPDiscount: Double = 0.0
     ) {
         self.id = id
         self.name = name
@@ -48,5 +50,6 @@ final class Income {
         self.dollarEmployerContribHSA = dollarEmployerContribHSA
         self.dollarMiscPreTaxDeductions = dollarMiscPreTaxDeductions
         self.pctContribESPP = pctContribESPP
+        self.pctESPPDiscount = pctESPPDiscount
     }
 }

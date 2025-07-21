@@ -12,8 +12,8 @@ struct ContentView: View {
     @Query var budgets: [Budget]
     @Query var incomes: [Income]
     
-    @State var appState = AppState()
-    
+    @Environment(AppState.self) var appState
+        
     private static let lastWorkingBudgetIDKey = "lastWorkingBudgetID"
         
     enum Tab: Hashable {
@@ -52,13 +52,8 @@ struct ContentView: View {
             }
         }
     }
-    
-    init() {
-        fetchLastWorkingBudget()
-        fetchLastWorkingIncome()
-    }
-    
-    func fetchLastWorkingBudget() {
+
+    private func fetchLastWorkingBudget() {
         let savedID = UserDefaults.standard.string(forKey: Self.lastWorkingBudgetIDKey)
         let matched = budgets.first(where: { $0.id.uuidString == savedID })
         if let matchedBudget = matched {
@@ -68,7 +63,7 @@ struct ContentView: View {
         }
     }
     
-    func fetchLastWorkingIncome() {
+    private func fetchLastWorkingIncome() {
         
     }
 }
