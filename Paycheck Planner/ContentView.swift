@@ -15,6 +15,7 @@ struct ContentView: View {
     @Environment(AppState.self) var appState
         
     private static let lastWorkingBudgetIDKey = "lastWorkingBudgetID"
+    private static let lastWorkingIncomeIDKey = "lastWorkingIncomeID"
         
     enum Tab: Hashable {
         case overview, budget, track, grow, profile
@@ -64,7 +65,13 @@ struct ContentView: View {
     }
     
     private func fetchLastWorkingIncome() {
-        
+        let savedID = UserDefaults.standard.string(forKey: Self.lastWorkingIncomeIDKey)
+        let matched = incomes.first(where: { $0.id.uuidString == savedID })
+        if let matchedIncome = matched {
+            appState.workingIncome = matchedIncome
+        } else {
+            appState.workingIncome = incomes.first
+        }
     }
 }
 
