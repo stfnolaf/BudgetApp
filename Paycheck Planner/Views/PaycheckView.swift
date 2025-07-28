@@ -63,10 +63,9 @@ struct ExpandableSection<Content: View>: View {
             .buttonStyle(.plain)
         ) {
             if isExpanded {
-                VStack(alignment: .leading, spacing: 32) {
+                VStack(alignment: .leading, spacing: 20) {
                     content()
                 }
-                .padding(.leading)
             }
         }
     }
@@ -99,32 +98,90 @@ struct IncomeEditingView: View {
                 }
             }
             .pickerStyle(.menu)
-            .padding(.vertical, 4)
             
             ExpandableSection(title: "401k Options") {
-                PickerWheelSummoner(title: "Pre-Tax Contribution", currentValue: $income.pctContribPreTax401k)
-                PickerWheelSummoner(title: "Employer Match", currentValue: $income.pctEmployerMatch401k)
-                PickerWheelSummoner(title: "Employer Match Limit", currentValue: $income.pctEmployerMatchMax401k)
+                Section(header:
+                    Text("Employee Settings")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                ) {
+                    VStack(alignment: .leading, spacing: 16) {
+                        PickerWheelSummoner(title: "Pre-Tax", currentValue: $income.pctContribPreTax401k)
+                        Divider()
+                        PickerWheelSummoner(title: "After-Tax", currentValue: $income.pctContribAfterTax401k)
+                        Divider()
+                        PickerWheelSummoner(title: "Roth", currentValue: $income.pctContribRoth401k)
+                    }
+                    .padding(.leading)
+                }
+                Section(header:
+                    Text("Employer Settings")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                ) {
+                    VStack(alignment: .leading, spacing: 16) {
+                        PickerWheelSummoner(title: "Match", currentValue: $income.pctEmployerMatch401k)
+                        Divider()
+                        PickerWheelSummoner(title: "Match Limit", currentValue: $income.pctEmployerMatchMax401k)
+                    }
+                    .padding(.leading)
+                }
             }
             
             ExpandableSection(title: "HSA Options") {
-                LabeledContent("Annual Contribution") {
-                    TextField("Annual Contribution", value: $income.dollarContribHSA, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
-                        .keyboardType(.decimalPad)
-                        .multilineTextAlignment(.trailing)
-                        .frame(maxWidth: 100)
+                Section(header:
+                    Text("Employee Settings")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                ) {
+                    VStack(alignment: .leading, spacing: 16) {
+                        LabeledContent("Contribution") {
+                            TextField("EmployeeContribution", value: $income.dollarContribHSA, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
+                                .keyboardType(.decimalPad)
+                                .multilineTextAlignment(.trailing)
+                                .frame(maxWidth: 100)
+                        }
+                    }
+                    .padding(.leading)
                 }
-                LabeledContent("Employer Contribution") {
-                    TextField("Employer Contribution", value: $income.dollarEmployerContribHSA, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
-                        .keyboardType(.decimalPad)
-                        .multilineTextAlignment(.trailing)
-                        .frame(maxWidth: 100)
+                Section(header:
+                    Text("Employer Settings")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                ) {
+                    VStack(alignment: .leading, spacing: 16) {
+                        LabeledContent("Contribution") {
+                            TextField("Employer Contribution", value: $income.dollarEmployerContribHSA, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
+                                .keyboardType(.decimalPad)
+                                .multilineTextAlignment(.trailing)
+                                .frame(maxWidth: 100)
+                        }
+                    }
+                    .padding(.leading)
                 }
             }
             
             ExpandableSection(title: "ESPP Options") {
-                PickerWheelSummoner(title: "Percent Withheld", currentValue: $income.pctContribESPP)
-                PickerWheelSummoner(title: "Discount", currentValue: $income.pctESPPDiscount)
+                Section(header:
+                    Text("Employee Settings")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                ) {
+                    VStack(alignment: .leading, spacing: 16) {
+                        PickerWheelSummoner(title: "Percent Withheld", currentValue: $income.pctContribESPP)
+                    }
+                    .padding(.leading)
+                }
+                Section(header:
+                    Text("Employer Settings")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                ) {
+                    VStack(alignment: .leading, spacing: 16) {
+                        PickerWheelSummoner(title: "Discount", currentValue: $income.pctESPPDiscount)
+                    }
+                    .padding(.leading)
+                }
             }
         }
     }
@@ -134,8 +191,6 @@ struct PaycheckView: View {
     @Binding var selectedTab: ContentView.Tab
     
     @Environment(AppState.self) var appState
-        
-    @State private var showIncomeSelection = false
     
     var body: some View {
         NavigationStack {

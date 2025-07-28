@@ -76,12 +76,12 @@ struct ContentView: View {
 }
 
 #Preview {
-    var rent = Expense(category: "Rent", amount: 3500, title: "Rent", frequency: .monthly)
-    var groceries = Expense(category: "Groceries", amount: 300, title: "Food", frequency: .monthly)
-    var internet = Expense(category: "Utilities", amount: 80, title: "Internet", frequency: .monthly)
+    let rent = Expense(category: "Rent", amount: 3500, title: "Rent", frequency: .monthly)
+    let groceries = Expense(category: "Groceries", amount: 300, title: "Food", frequency: .monthly)
+    let internet = Expense(category: "Utilities", amount: 80, title: "Internet", frequency: .monthly)
     let previewAppState = AppState()
-    var budget = Budget("My Budget", expenses: [rent, groceries, internet])
-    var income = Income("My Income", annualGrossIncome: 164390, pctContribPreTax401k: 0.06, pctEmployerMatch401k: 0.75, pctEmployerMatchMax401k: 0.06, dollarContribHSA: 4300, dollarEmployerContribHSA: 600, pctContribESPP: 0.05, pctESPPDiscount: 0.15)
+    let budget = Budget("My Budget", expenses: [rent, groceries, internet])
+    let income = Income("My Income", annualGrossIncome: 164390, pctContribPreTax401k: 0.06, pctEmployerMatch401k: 0.75, pctEmployerMatchMax401k: 0.06, dollarContribHSA: 4300, dollarEmployerContribHSA: 600, pctContribESPP: 0.05, pctESPPDiscount: 0.15)
     let container = try! ModelContainer(for: Budget.self, Income.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
     let context = ModelContext(container)
     context.insert(budget)

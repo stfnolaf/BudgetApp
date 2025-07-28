@@ -181,9 +181,9 @@ struct BudgetView: View {
 
 #Preview {
     @Previewable @State var selectedTab: ContentView.Tab = .budget
-    var rent = Expense(category: "Rent", amount: 3500, title: "Rent", frequency: .monthly)
-    var groceries = Expense(category: "Groceries", amount: 300, title: "Food", frequency: .monthly)
-    var internet = Expense(category: "Utilities", amount: 80, title: "Internet", frequency: .monthly)
+    let rent = Expense(category: "Rent", amount: 3500, title: "Rent", frequency: .monthly)
+    let groceries = Expense(category: "Groceries", amount: 300, title: "Food", frequency: .monthly)
+    let internet = Expense(category: "Utilities", amount: 80, title: "Internet", frequency: .monthly)
     let previewAppState = AppState()
     previewAppState.workingBudget = Budget("My Budget", expenses: [rent, groceries, internet])
     
