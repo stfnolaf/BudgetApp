@@ -14,48 +14,53 @@ final class Income {
     var name: String
     
     var annualGrossIncome: Double
-
-    var pctContribPreTax401k: Double
-    var pctContribAfterTax401k: Double
-    var pctContribRoth401k: Double
-    var pctEmployerMatch401k: Double
-    var pctEmployerMatchMax401k: Double
-
-    var dollarContribHSA: Double
-    var dollarEmployerContribHSA: Double
-
-    var dollarMiscPreTaxDeductions: Double
-
-    var pctContribESPP: Double
-    var pctESPPDiscount: Double
+    
+    var k401_preTaxContribution: Double
+    var k401_afterTaxContribution: Double
+    var k401_rothContribution: Double
+    var k401_employerMatch: Double
+    var k401_employerMatchLimit: Double
+    
+    var espp_employeeContribution: Double
+    var espp_employerDiscount: Double
+    var espp_contributionLimit: Double
+    
+    var hsa_employeeContribTarget: Double
+    var hsa_employerContribution: Double
 
     init(
         _ name: String,
         id: UUID = UUID(),
         annualGrossIncome: Double = 0.0,
-        pctContribPreTax401k: Double = 0.0,
-        pctContribAfterTax401k: Double = 0.0,
-        pctContribRoth401k: Double = 0.0,
-        pctEmployerMatch401k: Double = 0.0,
-        pctEmployerMatchMax401k: Double = 0.0,
-        dollarContribHSA: Double = 0.0,
-        dollarEmployerContribHSA: Double = 0.0,
-        dollarMiscPreTaxDeductions: Double = 0.0,
-        pctContribESPP: Double = 0.0,
-        pctESPPDiscount: Double = 0.0
+        
+        k401_preTaxContribution: Double = 0.0,
+        k401_afterTaxContribution: Double = 0.0,
+        k401_rothContribution: Double = 0.0,
+        k401_employerMatch: Double = 0.0,
+        k401_employerMatchLimit: Double = 0.0,
+        
+        espp_employeeContribution: Double = 0.0,
+        espp_employerDiscount: Double = 0.0,
+        espp_contributionLimit: Double = 0.0,
+        
+        hsa_employeeContribTarget: Double = 0.0,
+        hsa_employerContribution: Double = 0.0
     ) {
         self.id = id
         self.name = name
         self.annualGrossIncome = annualGrossIncome
-        self.pctContribPreTax401k = pctContribPreTax401k
-        self.pctContribAfterTax401k = pctContribAfterTax401k
-        self.pctContribRoth401k = pctContribRoth401k
-        self.pctEmployerMatch401k = pctEmployerMatch401k
-        self.pctEmployerMatchMax401k = pctEmployerMatchMax401k
-        self.dollarContribHSA = dollarContribHSA
-        self.dollarEmployerContribHSA = dollarEmployerContribHSA
-        self.dollarMiscPreTaxDeductions = dollarMiscPreTaxDeductions
-        self.pctContribESPP = pctContribESPP
-        self.pctESPPDiscount = pctESPPDiscount
+        
+        self.k401_preTaxContribution = k401_preTaxContribution
+        self.k401_afterTaxContribution = k401_afterTaxContribution
+        self.k401_rothContribution = k401_rothContribution
+        self.k401_employerMatch = k401_employerMatch
+        self.k401_employerMatchLimit = k401_employerMatchLimit
+        
+        self.espp_employeeContribution = espp_employeeContribution
+        self.espp_employerDiscount = espp_employerDiscount
+        self.espp_contributionLimit = espp_contributionLimit
+        
+        self.hsa_employeeContribTarget = hsa_employeeContribTarget
+        self.hsa_employerContribution = hsa_employerContribution
     }
 }

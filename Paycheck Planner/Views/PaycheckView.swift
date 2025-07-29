@@ -45,32 +45,6 @@ struct PickerWheelSummoner: View {
     }
 }
 
-struct ExpandableSection<Content: View>: View {
-    let title: String
-    @ViewBuilder let content: () -> Content
-    
-    @State private var isExpanded: Bool = false
-    
-    var body: some View {
-        Section(header:
-            Button(action: { isExpanded.toggle() }) {
-                HStack {
-                    Text(title)
-                    Spacer()
-                    Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
-                }
-            }
-            .buttonStyle(.plain)
-        ) {
-            if isExpanded {
-                VStack(alignment: .leading, spacing: 20) {
-                    content()
-                }
-            }
-        }
-    }
-}
-
 struct IncomeEditingView: View {
     @Bindable var income: Income
     
@@ -82,6 +56,99 @@ struct IncomeEditingView: View {
         "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
         "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"
     ]
+    
+    private var k401Form: some View {
+        Form {
+            Section(header: Text("Employee Settings")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            ) {
+                VStack(alignment: .leading, spacing: 16) {
+                    PickerWheelSummoner(title: "Pre-Tax", currentValue: $income.k401_preTaxContribution)
+                    Divider()
+                    PickerWheelSummoner(title: "After-Tax", currentValue: $income.k401_afterTaxContribution)
+                    Divider()
+                    PickerWheelSummoner(title: "Roth", currentValue: $income.k401_rothContribution)
+                }
+                .padding(.leading)
+            }
+            Section(header: Text("Employer Settings")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            ) {
+                VStack(alignment: .leading, spacing: 16) {
+                    PickerWheelSummoner(title: "Match", currentValue: $income.k401_employerMatch)
+                    Divider()
+                    PickerWheelSummoner(title: "Match Limit", currentValue: $income.k401_employerMatchLimit)
+                }
+                .padding(.leading)
+            }
+        }
+    }
+    
+    private var hsaForm: some View {
+        Form {
+            Section(header: Text("Employee Settings")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            ) {
+                VStack(alignment: .leading, spacing: 16) {
+                    LabeledContent("Annual Contribution") {
+                        TextField("Employee Annual Contribution", value: $income.hsa_employeeContribTarget, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(maxWidth: 100)
+                    }
+                }
+                .padding(.leading)
+            }
+            Section(header: Text("Employer Settings")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            ) {
+                VStack(alignment: .leading, spacing: 16) {
+                    LabeledContent("Annual Contribution") {
+                        TextField("Employer Annual Contribution", value: $income.hsa_employerContribution, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(maxWidth: 100)
+                    }
+                }
+                .padding(.leading)
+            }
+        }
+    }
+    
+    private var esppForm: some View {
+        Form {
+            Section(header: Text("Employee Settings")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            ) {
+                VStack(alignment: .leading, spacing: 16) {
+                    PickerWheelSummoner(title: "Percent Withheld", currentValue: $income.espp_employeeContribution)
+                }
+                .padding(.leading)
+            }
+            Section(header:
+                        Text("Employer Settings")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            ) {
+                VStack(alignment: .leading, spacing: 16) {
+                    PickerWheelSummoner(title: "Discount", currentValue: $income.espp_employerDiscount)
+                    Divider()
+                    LabeledContent("Contribution Limit") {
+                        TextField("Contribution Limit", value: $income.espp_contributionLimit, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(maxWidth: 100)
+                    }
+                }
+                .padding(.leading)
+            }
+        }
+    }
     
     var body: some View {
         Form {
@@ -99,88 +166,25 @@ struct IncomeEditingView: View {
             }
             .pickerStyle(.menu)
             
-            ExpandableSection(title: "401k Options") {
-                Section(header:
-                    Text("Employee Settings")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                ) {
-                    VStack(alignment: .leading, spacing: 16) {
-                        PickerWheelSummoner(title: "Pre-Tax", currentValue: $income.pctContribPreTax401k)
-                        Divider()
-                        PickerWheelSummoner(title: "After-Tax", currentValue: $income.pctContribAfterTax401k)
-                        Divider()
-                        PickerWheelSummoner(title: "Roth", currentValue: $income.pctContribRoth401k)
-                    }
-                    .padding(.leading)
+            Section("Retirement Accounts") {
+                
+                NavigationLink("401k") {
+                    k401Form
                 }
-                Section(header:
-                    Text("Employer Settings")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                ) {
-                    VStack(alignment: .leading, spacing: 16) {
-                        PickerWheelSummoner(title: "Match", currentValue: $income.pctEmployerMatch401k)
-                        Divider()
-                        PickerWheelSummoner(title: "Match Limit", currentValue: $income.pctEmployerMatchMax401k)
-                    }
-                    .padding(.leading)
+                
+                NavigationLink("HSA") {
+                    hsaForm
                 }
+                
             }
             
-            ExpandableSection(title: "HSA Options") {
-                Section(header:
-                    Text("Employee Settings")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                ) {
-                    VStack(alignment: .leading, spacing: 16) {
-                        LabeledContent("Contribution") {
-                            TextField("EmployeeContribution", value: $income.dollarContribHSA, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
-                                .keyboardType(.decimalPad)
-                                .multilineTextAlignment(.trailing)
-                                .frame(maxWidth: 100)
-                        }
-                    }
-                    .padding(.leading)
+            Section("Other Deductions") {
+                NavigationLink("ESPP") {
+                    esppForm
                 }
-                Section(header:
-                    Text("Employer Settings")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                ) {
-                    VStack(alignment: .leading, spacing: 16) {
-                        LabeledContent("Contribution") {
-                            TextField("Employer Contribution", value: $income.dollarEmployerContribHSA, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
-                                .keyboardType(.decimalPad)
-                                .multilineTextAlignment(.trailing)
-                                .frame(maxWidth: 100)
-                        }
-                    }
-                    .padding(.leading)
-                }
-            }
-            
-            ExpandableSection(title: "ESPP Options") {
-                Section(header:
-                    Text("Employee Settings")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                ) {
-                    VStack(alignment: .leading, spacing: 16) {
-                        PickerWheelSummoner(title: "Percent Withheld", currentValue: $income.pctContribESPP)
-                    }
-                    .padding(.leading)
-                }
-                Section(header:
-                    Text("Employer Settings")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                ) {
-                    VStack(alignment: .leading, spacing: 16) {
-                        PickerWheelSummoner(title: "Discount", currentValue: $income.pctESPPDiscount)
-                    }
-                    .padding(.leading)
+                
+                NavigationLink("Misc") {
+                    
                 }
             }
         }
@@ -243,3 +247,4 @@ struct PaycheckView: View {
     return PaycheckView(selectedTab: $selectedTab)
         .environment(previewAppState)
 }
+
