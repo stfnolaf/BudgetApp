@@ -18,7 +18,7 @@ struct ContentView: View {
     private static let lastWorkingIncomeIDKey = "lastWorkingIncomeID"
         
     enum Tab: Hashable {
-        case overview, budget, track, grow, profile
+        case overview, budget, track, grow, income
     }
     
     @State private var selectedTab: Tab = .overview
@@ -39,7 +39,7 @@ struct ContentView: View {
                 .tag(Tab.grow)
             PaycheckView(selectedTab: $selectedTab)
                 .tabItem { Label("Income", systemImage: "dollarsign.circle") }
-                .tag(Tab.profile)
+                .tag(Tab.income)
         }
         .onAppear() {
             fetchLastWorkingBudget()

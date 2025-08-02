@@ -45,6 +45,10 @@ struct PickerWheelSummoner: View {
     }
 }
 
+enum IncomePath: Hashable {
+    case k401, hsa, espp, misc
+}
+
 struct IncomeEditingView: View {
     @Bindable var income: Income
     
@@ -167,25 +171,13 @@ struct IncomeEditingView: View {
             .pickerStyle(.menu)
             
             Section("Retirement Accounts") {
-                
-                NavigationLink("401k") {
-                    k401Form
-                }
-                
-                NavigationLink("HSA") {
-                    hsaForm
-                }
-                
+                NavigationLink("401k", value: IncomePath.k401)
+                NavigationLink("HSA", value: IncomePath.hsa)
             }
             
             Section("Other Deductions") {
-                NavigationLink("ESPP") {
-                    esppForm
-                }
-                
-                NavigationLink("Misc") {
-                    
-                }
+                NavigationLink("ESPP", value: IncomePath.espp)
+                NavigationLink("Misc", value: IncomePath.misc)
             }
         }
     }
@@ -193,11 +185,12 @@ struct IncomeEditingView: View {
 
 struct PaycheckView: View {
     @Binding var selectedTab: ContentView.Tab
+    @State private var navigationPath = NavigationPath()
     
     @Environment(AppState.self) var appState
     
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
                     Text(appState.workingIncome?.name ?? "")
@@ -234,6 +227,19 @@ struct PaycheckView: View {
                     }
                 }
                 Spacer()
+            }
+        }
+        .navigationDestination(for: IncomePath.self) { path in
+            switch path {
+                case .k401: k401Form
+                case .hsa: hsaForm
+                case .espp: esppForm
+            }
+        }
+        .onChange(of: selectedTab) {
+            print("Tab changed: \(selectedTab)")
+            if(selectedTab == .income) {
+                navigationPath = NavigationPath()
             }
         }
     }
