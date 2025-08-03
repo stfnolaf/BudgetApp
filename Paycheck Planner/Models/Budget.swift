@@ -8,13 +8,28 @@
 import Foundation
 import SwiftData
 
-enum Frequency: String, Codable, CaseIterable {
-    case perPaycheck = "Per Paycheck"
-    case weekly = "Weekly"
-    case biweekly = "Biweekly"
-    case monthly = "Monthly"
-    case semiannually = "Semiannually"
-    case annually = "Annually"
+enum Frequency: String, Codable, CaseIterable, Identifiable {
+    case weekly
+    case biweekly
+    case monthly
+    case semimonthly
+    case quarterly
+    case annually
+    case oneTime
+    
+    var id: String { rawValue }
+    
+    var displayName: String {
+        switch self {
+        case .weekly: return "Weekly"
+        case .biweekly: return "Biweekly"
+        case .monthly: return "Monthly"
+        case .semimonthly: return "Semimonthly"
+        case .quarterly: return "Quarterly"
+        case .annually: return "Annually"
+        case .oneTime: return "One Time"
+        }
+    }
 }
 
 @Model

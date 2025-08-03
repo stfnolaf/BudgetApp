@@ -23,7 +23,7 @@ struct Paycheck_PlannerApp: App {
     
     init() {
         do {
-            container = try ModelContainer(for: Budget.self, Expense.self, Income.self)
+            container = try ModelContainer(for: Budget.self, Profile.self)
         } catch {
             fatalError("Failed to create ModelContainer: \(error.localizedDescription)")
         }

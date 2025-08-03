@@ -10,8 +10,9 @@ import SwiftData
 
 struct ContentView: View {
     @Query var budgets: [Budget]
-    @Query var incomes: [Income]
+    @Query var profiles: [Profile]
     
+    @Environment(\.modelContext) private var modelContext
     @Environment(AppState.self) var appState
         
     private static let lastWorkingBudgetIDKey = "lastWorkingBudgetID"
@@ -37,13 +38,17 @@ struct ContentView: View {
             GrowView()
                 .tabItem { Label("Grow", systemImage: "chart.bar") }
                 .tag(Tab.grow)
-            PaycheckView(selectedTab: $selectedTab)
+            IncomeView(selectedTab: $selectedTab)
                 .tabItem { Label("Income", systemImage: "dollarsign.circle") }
                 .tag(Tab.income)
         }
         .onAppear() {
             fetchLastWorkingBudget()
-            fetchLastWorkingIncome()
+            if(profiles.isEmpty) {
+                let newProfile = Profile()
+                modelContext.insert(newProfile)
+            }
+            appState.userProfile = profiles.first
         }
         .onChange(of: appState.workingBudget) {
             if let newID = appState.workingBudget?.id {
@@ -63,16 +68,6 @@ struct ContentView: View {
             appState.workingBudget = budgets.first
         }
     }
-    
-    private func fetchLastWorkingIncome() {
-        let savedID = UserDefaults.standard.string(forKey: Self.lastWorkingIncomeIDKey)
-        let matched = incomes.first(where: { $0.id.uuidString == savedID })
-        if let matchedIncome = matched {
-            appState.workingIncome = matchedIncome
-        } else {
-            appState.workingIncome = incomes.first
-        }
-    }
 }
 
 #Preview {
@@ -81,13 +76,10 @@ struct ContentView: View {
     let internet = Expense(category: "Utilities", amount: 80, title: "Internet", frequency: .monthly)
     let previewAppState = AppState()
     let budget = Budget("My Budget", expenses: [rent, groceries, internet])
-    let income = Income("My Income")
-    let container = try! ModelContainer(for: Budget.self, Income.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+    let container = try! ModelContainer(for: Budget.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
     let context = ModelContext(container)
     context.insert(budget)
-    context.insert(income)
     previewAppState.workingBudget = budget
-    previewAppState.workingIncome = income
     return ContentView()
         .environment(previewAppState)
         .modelContext(context)

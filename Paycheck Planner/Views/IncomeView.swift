@@ -45,8 +45,8 @@ struct PickerWheelSummoner: View {
     }
 }
 
-enum IncomePath: Hashable {
-    case k401, hsa, espp, misc
+enum IncomeOptionsPath: Hashable {
+    case management, k401, hsa, espp, misc
 }
 
 struct IncomeEditingView: View {
@@ -60,35 +60,6 @@ struct IncomeEditingView: View {
         "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
         "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"
     ]
-    
-    private var k401Form: some View {
-        Form {
-            Section(header: Text("Employee Settings")
-                .font(.caption)
-                .foregroundColor(.secondary)
-            ) {
-                VStack(alignment: .leading, spacing: 16) {
-                    PickerWheelSummoner(title: "Pre-Tax", currentValue: $income.k401_preTaxContribution)
-                    Divider()
-                    PickerWheelSummoner(title: "After-Tax", currentValue: $income.k401_afterTaxContribution)
-                    Divider()
-                    PickerWheelSummoner(title: "Roth", currentValue: $income.k401_rothContribution)
-                }
-                .padding(.leading)
-            }
-            Section(header: Text("Employer Settings")
-                .font(.caption)
-                .foregroundColor(.secondary)
-            ) {
-                VStack(alignment: .leading, spacing: 16) {
-                    PickerWheelSummoner(title: "Match", currentValue: $income.k401_employerMatch)
-                    Divider()
-                    PickerWheelSummoner(title: "Match Limit", currentValue: $income.k401_employerMatchLimit)
-                }
-                .padding(.leading)
-            }
-        }
-    }
     
     private var hsaForm: some View {
         Form {
@@ -171,19 +142,19 @@ struct IncomeEditingView: View {
             .pickerStyle(.menu)
             
             Section("Retirement Accounts") {
-                NavigationLink("401k", value: IncomePath.k401)
-                NavigationLink("HSA", value: IncomePath.hsa)
+                NavigationLink("401k", value: IncomeOptionsPath.k401)
+                NavigationLink("HSA", value: IncomeOptionsPath.hsa)
             }
             
             Section("Other Deductions") {
-                NavigationLink("ESPP", value: IncomePath.espp)
-                NavigationLink("Misc", value: IncomePath.misc)
+                NavigationLink("ESPP", value: IncomeOptionsPath.espp)
+                NavigationLink("Misc", value: IncomeOptionsPath.misc)
             }
         }
     }
 }
 
-struct PaycheckView: View {
+struct IncomeView: View {
     @Binding var selectedTab: ContentView.Tab
     @State private var navigationPath = NavigationPath()
     
@@ -193,47 +164,27 @@ struct PaycheckView: View {
         NavigationStack(path: $navigationPath) {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
-                    Text(appState.workingIncome?.name ?? "")
+                    Text("User Income")
                         .font(.title2)
                         .fontWeight(.bold)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding([.top, .horizontal])
                     Spacer()
-                    NavigationLink(destination: IncomeSelectionView()) {
+                    NavigationLink(value: IncomeOptionsPath.management) {
                         Image(systemName: "list.bullet")
                     }
                     .padding([.top, .horizontal])
                 }
-                Spacer()
-                if let income = appState.workingIncome {
-                    IncomeEditingView(income: income)
-                } else {
-                    VStack {
-                        Text("No paycheck set up yet!")
-                        Button(action: {
-
-                        }) {
-                            HStack {
-                                Image(systemName: "plus.circle.fill")
-                                Text("New Paycheck")
-                                    .fontWeight(.semibold)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.accentColor.opacity(0.15))
-                            .cornerRadius(12)
-                        }
-                        .padding()
-                    }
-                }
-                Spacer()
+                IncomeEditingView(income: income)
             }
         }
-        .navigationDestination(for: IncomePath.self) { path in
+        .navigationDestination(for: IncomeOptionsPath.self) { path in
             switch path {
-                case .k401: k401Form
-                case .hsa: hsaForm
-                case .espp: esppForm
+                case .management: IncomeSelectionView()
+                case .k401: k401OptionsView(income: income)
+                case .hsa: HSAOptionsView(income: income)
+                case .espp: ESPPOptionsView(income: income)
+                case .misc: MiscDeductionsOptionsView(income: income)
             }
         }
         .onChange(of: selectedTab) {
@@ -250,7 +201,7 @@ struct PaycheckView: View {
     let previewAppState = AppState()
     let income = Income("AMD Day Job")
     previewAppState.workingIncome = income
-    return PaycheckView(selectedTab: $selectedTab)
+    return IncomeView(selectedTab: $selectedTab)
         .environment(previewAppState)
 }
 

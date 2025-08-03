@@ -10,6 +10,6 @@ import SwiftData
 
 @Observable
 final class AppState {
-    var workingIncome: Income?
+    var userProfile: Profile!
     var workingBudget: Budget?
 }

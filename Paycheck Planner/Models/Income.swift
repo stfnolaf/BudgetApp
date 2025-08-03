@@ -7,60 +7,140 @@
 import Foundation
 import SwiftData
 
+protocol IncomeProtocol {
+    var grossIncome: Double { get }
+    var frequency: Frequency { get }
+}
+
+func convertIncomeRate(amount: Double, per: Frequency, to: Frequency) -> Double {
+    // TODO
+    return 0
+}
+
+enum IncomeType: String, Codable, CaseIterable, Identifiable {
+    case salary
+    case freelance
+    case rental
+    case business	
+    case pension
+    case socialSecurity
+    case alimonyChildSupport
+    case governmentBenefits
+    case other
+    
+    var id: String { rawValue }
+    
+    var displayName: String {
+        switch self {
+        case .salary: return "Salary"
+        case .freelance: return "Freelance"
+        case .rental: return "Rental"
+        case .business: return "Business"
+        case .pension: return "Pension"
+        case .socialSecurity: return "Social Security"
+        case .alimonyChildSupport: return "Alimony/Child Support"
+        case .governmentBenefits: return "Government Benefits"
+        case .other: return "Other"
+        }
+    }
+}
+
 @Model
-final class Income {
+final class Profile {
+    @Attribute(.unique) var id: UUID
+    @Relationship var incomeSources: [IncomeSource]
+    @Relationship var individualRetirementPlans: [RetirementPlanDetails]
+        
+    init(id: UUID = UUID(), incomeSources: [IncomeSource] = [], retirementPlans: [RetirementPlanDetails] = []) {
+        self.id = id
+        self.incomeSources = incomeSources
+        self.individualRetirementPlans = retirementPlans
+    }
+}
+
+@Model
+final class EsppOptions {
+    var contributionPct: Double
+    var discountPct: Double
+    var periodMonths: Int
+    var sellOnVest: Bool
+    
+    init(contributionPct: Double = 0.0, discountPct: Double = 0.0, periodMonths: Int = 6, sellOnVest: Bool = false) {
+        self.contributionPct = contributionPct
+        self.discountPct = discountPct
+        self.periodMonths = periodMonths
+        self.sellOnVest = sellOnVest
+    }
+}
+
+@Model
+final class SalaryDetails: IncomeProtocol {
+    var annualSalary: Double
+    var annualEquity: Double
+    var grossIncome: Double {
+        get {
+            return annualSalary + annualEquity
+        }
+    }
+    var frequency: Frequency
+    @Relationship var employerRetirementPlans: [RetirementPlanDetails]
+    @Relationship var esppOptions: EsppOptions
+    
+    init(annualSalary: Double, annualEquity: Double = 0.0, frequency: Frequency = .annually, employerRetirementPlans: [RetirementPlanDetails] = [], espp: EsppOptions = EsppOptions()) {
+        self.annualSalary = annualSalary
+        self.annualEquity = annualEquity
+        self.frequency = frequency
+        self.employerRetirementPlans = employerRetirementPlans
+        self.esppOptions = espp
+    }
+}
+
+@Model
+final class IncomeSource {
     @Attribute(.unique) var id: UUID
     
     var name: String
+    var type: IncomeType
+    var expiryDate: Date?
     
-    var annualGrossIncome: Double
-    
-    var k401_preTaxContribution: Double
-    var k401_afterTaxContribution: Double
-    var k401_rothContribution: Double
-    var k401_employerMatch: Double
-    var k401_employerMatchLimit: Double
-    
-    var espp_employeeContribution: Double
-    var espp_employerDiscount: Double
-    var espp_contributionLimit: Double
-    
-    var hsa_employeeContribTarget: Double
-    var hsa_employerContribution: Double
+    @Relationship var salary: SalaryDetails?
 
     init(
         _ name: String,
+        type: IncomeType,
         id: UUID = UUID(),
         annualGrossIncome: Double = 0.0,
-        
-        k401_preTaxContribution: Double = 0.0,
-        k401_afterTaxContribution: Double = 0.0,
-        k401_rothContribution: Double = 0.0,
-        k401_employerMatch: Double = 0.0,
-        k401_employerMatchLimit: Double = 0.0,
-        
-        espp_employeeContribution: Double = 0.0,
-        espp_employerDiscount: Double = 0.0,
-        espp_contributionLimit: Double = 0.0,
-        
-        hsa_employeeContribTarget: Double = 0.0,
-        hsa_employerContribution: Double = 0.0
+        expiryDate: Date? = nil
     ) {
         self.id = id
         self.name = name
-        self.annualGrossIncome = annualGrossIncome
-        
-        self.k401_preTaxContribution = k401_preTaxContribution
-        self.k401_afterTaxContribution = k401_afterTaxContribution
-        self.k401_rothContribution = k401_rothContribution
-        self.k401_employerMatch = k401_employerMatch
-        self.k401_employerMatchLimit = k401_employerMatchLimit
-        
-        self.espp_employeeContribution = espp_employeeContribution
-        self.espp_employerDiscount = espp_employerDiscount
-        self.espp_contributionLimit = espp_contributionLimit
-        
-        self.hsa_employeeContribTarget = hsa_employeeContribTarget
-        self.hsa_employerContribution = hsa_employerContribution
+        self.type = type
+        self.expiryDate = expiryDate
+    }
+}
+
+@Model
+final class RetirementPlanDetails {
+    var planType: String // e.g., "401k", "403b", etc.
+    var preTaxContribution: Double
+    var rothContribution: Double
+    var afterTaxContribution: Double
+    var employerMatch: Double
+    var employerMatchLimit: Double
+
+    init(
+        planType: String,
+        preTaxContribution: Double = 0,
+        rothContribution: Double = 0,
+        afterTaxContribution: Double = 0,
+        employerMatch: Double = 0,
+        employerMatchLimit: Double = 0
+    ) {
+        self.planType = planType
+        self.preTaxContribution = preTaxContribution
+        self.rothContribution = rothContribution
+        self.afterTaxContribution = afterTaxContribution
+        self.employerMatch = employerMatch
+        self.employerMatchLimit = employerMatchLimit
     }
 }
