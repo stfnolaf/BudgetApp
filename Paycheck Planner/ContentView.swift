@@ -9,11 +9,15 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
-    @Query var budgets: [Budget]
-    @Query var profiles: [Profile]
+    @Query var users: [User]
+    
+    private var user: User? {
+        users.first
+    }
+    
+    @State private var workingBudget: Budget?
     
     @Environment(\.modelContext) private var modelContext
-    @Environment(AppState.self) var appState
         
     private static let lastWorkingBudgetIDKey = "lastWorkingBudgetID"
     private static let lastWorkingIncomeIDKey = "lastWorkingIncomeID"
@@ -29,7 +33,7 @@ struct ContentView: View {
             OverviewView()
                 .tabItem { Label("Overview", systemImage: "chart.pie") }
                 .tag(Tab.overview)
-            BudgetView(selectedTab: $selectedTab)
+            BudgetView(budget: workingBudget)
                 .tabItem { Label("Budget", systemImage: "list.bullet.rectangle") }
                 .tag(Tab.budget)
             ExpenseView()
@@ -38,49 +42,60 @@ struct ContentView: View {
             GrowView()
                 .tabItem { Label("Grow", systemImage: "chart.bar") }
                 .tag(Tab.grow)
-            IncomeView(selectedTab: $selectedTab)
+            IncomeView()
                 .tabItem { Label("Income", systemImage: "dollarsign.circle") }
                 .tag(Tab.income)
         }
-        .onAppear() {
-            fetchLastWorkingBudget()
-            if(profiles.isEmpty) {
-                let newProfile = Profile()
-                modelContext.insert(newProfile)
-            }
-            appState.userProfile = profiles.first
+        .task {
+            await setupInitialData()
         }
-        .onChange(of: appState.workingBudget) {
-            if let newID = appState.workingBudget?.id {
-                UserDefaults.standard.set(newID.uuidString, forKey: Self.lastWorkingBudgetIDKey)
+        .environment(\.workingBudget, $workingBudget)
+        .environment(\.currentUser, user)
+        .onChange(of: workingBudget) {
+            if let newID = workingBudget?.persistentModelID {
+                do {
+                    let data = try JSONEncoder().encode(newID)
+                    UserDefaults.standard.set(data, forKey: Self.lastWorkingBudgetIDKey)
+                } catch {
+                    print("Failed to save budget ID: \(error)")
+                }
             } else {
                 UserDefaults.standard.removeObject(forKey: Self.lastWorkingBudgetIDKey)
             }
         }
     }
-
-    private func fetchLastWorkingBudget() {
-        let savedID = UserDefaults.standard.string(forKey: Self.lastWorkingBudgetIDKey)
-        let matched = budgets.first(where: { $0.id.uuidString == savedID })
-        if let matchedBudget = matched {
-            appState.workingBudget = matchedBudget
-        } else {
-            appState.workingBudget = budgets.first
+    
+    private func setupInitialData() async {
+        if users.isEmpty {
+            modelContext.insert(User())
         }
+        
+        if let user = self.user {
+            loadWorkingBudget(for: user)
+        }
+    }
+    
+    private func loadWorkingBudget(for user: User) {
+        // 1. Primary Method: Try to load the specific budget from UserDefaults
+        if let data = UserDefaults.standard.data(forKey: "currentBudgetID") {
+            do {
+                let budgetID = try JSONDecoder().decode(PersistentIdentifier.self, from: data)
+                // SwiftData is smart enough to find the model even without the user context
+                if let budget = modelContext.model(for: budgetID) as? Budget {
+                    self.workingBudget = budget
+                    return // Success!
+                }
+            } catch {
+                print("Failed to decode or find saved budget: \(error)")
+            }
+        }
+
+        // 2. Fallback Method: Grab the first budget directly from the user's list
+        self.workingBudget = user.budgets.first
     }
 }
 
 #Preview {
-    let rent = Expense(category: "Rent", amount: 3500, title: "Rent", frequency: .monthly)
-    let groceries = Expense(category: "Groceries", amount: 300, title: "Food", frequency: .monthly)
-    let internet = Expense(category: "Utilities", amount: 80, title: "Internet", frequency: .monthly)
-    let previewAppState = AppState()
-    let budget = Budget("My Budget", expenses: [rent, groceries, internet])
-    let container = try! ModelContainer(for: Budget.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
-    let context = ModelContext(container)
-    context.insert(budget)
-    previewAppState.workingBudget = budget
     return ContentView()
-        .environment(previewAppState)
-        .modelContext(context)
+        .modelContainer(.forPreview)
 }

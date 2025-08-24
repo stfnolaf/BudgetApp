@@ -9,8 +9,8 @@ import SwiftUI
 import SwiftData
 
 struct CategorySectionView: View {
-    let category: String
-    let expenses: [Expense]
+    let category: Expense.ExpenseCategory
+    let expenses: [BudgetItem]
     @Binding var isExpanded: Bool
 
     var categoryTotal: Double {
@@ -24,7 +24,7 @@ struct CategorySectionView: View {
                     Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
                         .foregroundColor(.accentColor)
                 }
-                Text(category)
+                Text(category.rawValue)
                     .font(.headline)
                 Spacer()
                 Text("$\(categoryTotal, specifier: "%.2f")")
@@ -39,9 +39,9 @@ struct CategorySectionView: View {
                     Text("No expenses in this category")
                         .foregroundColor(.secondary)
                 } else {
-                    ForEach(expenses, id: \.id) { expense in
+                    ForEach(expenses, id: \.persistentModelID) { expense in
                         HStack {
-                            Text(expense.title)
+                            Text(expense.name)
                             Spacer()
                             Text("$\(expense.amount, specifier: "%.2f")")
                                 .foregroundColor(.secondary)
@@ -57,37 +57,25 @@ struct BudgetEditingView: View {
     let budget: Budget
     @State private var showingNewExpenseSheet = false
     @State private var expandedCategories: Set<String> = []
-    
-    var expenses: [Expense] {
-        budget.expenses
-    }
-    
-    var expenseCategories: [String] {
-        budget.expenseCategories
-    }
-    
-    var expensesByCategory: [String: [Expense]] {
-        Dictionary(grouping: expenses) { $0.category }
-    }
 
-    var totalExpenditures: Double {
-        expenses.reduce(0) { $0 + $1.amount }
+    var totalMonthlyExpenditures: Double {
+        budget.items.reduce(0) { $0 + $1.convertedAmount(to: .monthly) }
     }
     var body: some View {
         VStack {
             List {
-                ForEach(expenseCategories, id: \.self) { category in
-                    let categoryExpenses = expensesByCategory[category] ?? []
+                ForEach(Expense.ExpenseCategory.allCases, id: \.self) { category in
+                    let categoryExpenses = budget.items.filter {$0.category == category}
                     CategorySectionView(
                         category: category,
                         expenses: categoryExpenses,
                         isExpanded: Binding(
-                            get: { expandedCategories.contains(category) },
+                            get: { expandedCategories.contains(category.rawValue) },
                             set: { isExpanded in
                                 if isExpanded {
-                                    expandedCategories.insert(category)
+                                    expandedCategories.insert(category.rawValue)
                                 } else {
-                                    expandedCategories.remove(category)
+                                    expandedCategories.remove(category.rawValue)
                                 }
                             }
                         )
@@ -101,7 +89,7 @@ struct BudgetEditingView: View {
                     Text("Total Expenditures")
                         .font(.headline)
                     Spacer()
-                    Text("$\(totalExpenditures, specifier: "%.2f")")
+                    Text("$\(totalMonthlyExpenditures, specifier: "%.2f")")
                         .font(.headline)
                         .foregroundColor(.accentColor)
                 }
@@ -124,23 +112,22 @@ struct BudgetEditingView: View {
             }
         }
         .sheet(isPresented: $showingNewExpenseSheet) {
-            NewExpenseView(expenseCategories: expenseCategories)
+            NewExpenseView()
         }
     }
 }
 
 struct BudgetView: View {
-    @Binding var selectedTab: ContentView.Tab
-    
-    @Environment(AppState.self) var appState
-        
+    let budget: Budget?
     @State private var showBudgetSelection = false
+    
+    @State private var budgetFrequency: BudgetItem.BudgetFrequency = .monthly
 
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
-                    Text(appState.workingBudget?.name ?? "")
+                    Text(budget?.name ?? "")
                         .font(.title2)
                         .fontWeight(.bold)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -152,8 +139,8 @@ struct BudgetView: View {
                     .padding([.top, .horizontal])
                 }
                 Spacer()
-                if let budget = appState.workingBudget {
-                    BudgetEditingView(budget: budget)
+                if let workingBudget = budget {
+                    BudgetEditingView(budget: workingBudget)
                 } else {
                     VStack {
                         Text("No budgets created yet!")
@@ -180,13 +167,12 @@ struct BudgetView: View {
 }
 
 #Preview {
-    @Previewable @State var selectedTab: ContentView.Tab = .budget
-    let rent = Expense(category: "Rent", amount: 3500, title: "Rent", frequency: .monthly)
-    let groceries = Expense(category: "Groceries", amount: 300, title: "Food", frequency: .monthly)
-    let internet = Expense(category: "Utilities", amount: 80, title: "Internet", frequency: .monthly)
-    let previewAppState = AppState()
-    previewAppState.workingBudget = Budget("My Budget", expenses: [rent, groceries, internet])
+    let budget = Budget(name: "Monthly Essentials")
     
-    return BudgetView(selectedTab: $selectedTab)
-        .environment(previewAppState)
+    let rent = BudgetItem(name: "Rent", amount: 2200, category: .housing, frequency: .monthly)
+    let groceries = BudgetItem(name: "Groceries", amount: 450, category: .food, frequency: .monthly)
+    let internet = BudgetItem(name: "Internet", amount: 80, category: .utilities, frequency: .monthly)
+    
+    budget.items = [rent, groceries, internet]
+    return BudgetView(budget: budget)
 }

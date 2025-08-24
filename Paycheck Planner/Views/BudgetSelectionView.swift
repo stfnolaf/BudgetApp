@@ -11,8 +11,8 @@ import SwiftData
 struct BudgetSelectionView: View {
     @Query var budgets: [Budget]
     
+    @Environment(\.workingBudget) private var workingBudget
     @Environment(\.modelContext) private var modelContext
-    @Environment(AppState.self) private var appState
     
     @State private var showAddBudgetAlert = false
     @State private var newBudgetName = ""
@@ -43,11 +43,11 @@ struct BudgetSelectionView: View {
         .alert("New Budget", isPresented: $showAddBudgetAlert, actions: {
             TextField("List Name", text: $newBudgetName)
             Button("Create", action: {
-                let newBudget = Budget(newBudgetName)
+                let newBudget = Budget(name: newBudgetName)
                 modelContext.insert(newBudget)
                 newBudgetName = ""
                 showAddBudgetAlert = false
-                appState.workingBudget = newBudget
+                workingBudget.wrappedValue = newBudget
             })
             Button("Cancel", role: .cancel, action: {
                 newBudgetName = ""
@@ -58,10 +58,6 @@ struct BudgetSelectionView: View {
 }
 
 #Preview {
-    let previewAppState = AppState()
-    let container = try! ModelContainer(for: Budget.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
-    let context = ModelContext(container)
     return BudgetSelectionView()
-        .environment(previewAppState)
-        .modelContext(context)
+        .modelContainer(.forPreview)
 }

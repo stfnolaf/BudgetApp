@@ -4,12 +4,10 @@ import SwiftData
 struct NewExpenseView: View {
     @Environment(\.dismiss) private var dismiss
     
-    let expenseCategories: [String]
-
     @State private var title: String = ""
     @State private var amount: Double = 0.0
-    @State private var selectedCategory: String = "Utilities"
-    @State private var selectedFrequency: Frequency = .monthly
+    @State private var selectedCategory: Expense.ExpenseCategory = .utilities
+    @State private var selectedFrequency: BudgetItem.BudgetFrequency = .monthly
     @State private var errorMessage: String?
 
     var body: some View {
@@ -20,12 +18,12 @@ struct NewExpenseView: View {
                     TextField("Amount", value: $amount, format: .currency(code: "USD"))
                         .keyboardType(.decimalPad)
                     Picker("Category", selection: $selectedCategory) {
-                        ForEach(expenseCategories, id: \.self) { category in
-                            Text(category).tag(category)
+                        ForEach(Expense.ExpenseCategory.allCases, id: \.self) { category in
+                            Text(category.rawValue).tag(category)
                         }
                     }
                     Picker("Frequency", selection: $selectedFrequency) {
-                        ForEach(Frequency.allCases, id: \.self) { freq in
+                        ForEach(BudgetItem.BudgetFrequency.allCases, id: \.self) { freq in
                             Text(freq.rawValue).tag(freq)
                         }
                     }
@@ -57,10 +55,10 @@ struct NewExpenseView: View {
             errorMessage = "Please enter a valid amount."
             return
         }
-        let newExpense = Expense(
-            category: selectedCategory,
+        let newExpense = BudgetItem(
+            name: title,
             amount: amount,
-            title: title,
+            category: selectedCategory,
             frequency: selectedFrequency
         )
         // TODO: add newExpense to model context
@@ -69,5 +67,5 @@ struct NewExpenseView: View {
 }
 
 #Preview {
-    NewExpenseView(expenseCategories: ["Rent", "Utilities", "Transportation", "Insurance", "Groceries", "Splurge", "Smile"])
+    NewExpenseView()
 }

@@ -8,76 +8,97 @@
 import Foundation
 import SwiftData
 
-enum Frequency: String, Codable, CaseIterable, Identifiable {
-    case weekly
-    case biweekly
-    case monthly
-    case semimonthly
-    case quarterly
-    case annually
-    case oneTime
-    
-    var id: String { rawValue }
-    
-    var displayName: String {
-        switch self {
-        case .weekly: return "Weekly"
-        case .biweekly: return "Biweekly"
-        case .monthly: return "Monthly"
-        case .semimonthly: return "Semimonthly"
-        case .quarterly: return "Quarterly"
-        case .annually: return "Annually"
-        case .oneTime: return "One Time"
-        }
-    }
-}
-
+// Represents a single, actual expense that has occurred.
 @Model
 final class Expense {
-    @Attribute(.unique) var id: UUID
-    var category: String
+    var name: String
     var amount: Double
-    @Attribute(.unique) var title: String
-    var frequency: Frequency
-    
-    @Relationship(inverse: \Budget.expenses)
-    var list: Budget?
+    var category: ExpenseCategory
+    var date: Date
+    var user: User?
 
-    init(
-        id: UUID = UUID(),
-        category: String = "",
-        amount: Double = 0.0,
-        title: String = "",
-        frequency: Frequency = .monthly
-    ) {
-        self.id = id
-        self.category = category
+    init(name: String, amount: Double, category: ExpenseCategory, date: Date) {
+        self.name = name
         self.amount = amount
-        self.title = title
-        self.frequency = frequency
+        self.category = category
+        self.date = date
+    }
+    
+    // Enum for categorizing expenses, which can be useful for reporting.
+    enum ExpenseCategory: String, Codable, CaseIterable {
+        case housing = "Housing"
+        case transportation = "Transportation"
+        case food = "Food"
+        case utilities = "Utilities"
+        case insurance = "Insurance"
+        case healthcare = "Healthcare"
+        case personal = "Personal"
+        case entertainment = "Entertainment"
+        case debt = "Debt"
+        case other = "Other"
     }
 }
 
+// Represents a user-defined budget for planning purposes.
 @Model
 final class Budget {
-    @Attribute(.unique) var id: UUID
-    @Attribute(.unique) var name: String
-    static let defaultExpenseCategories = ["Rent", "Utilities", "Subscriptions", "Transportation", "Groceries", "Splurge", "Smile"]
+    var name: String // e.g., "Monthly Minimums", "Ideal Spending Plan"
+    var user: User?
+    @Relationship(deleteRule: .cascade) var items: [BudgetItem] = []
 
-    var expenseCategories: [String]
-    
-    @Relationship
-    var expenses: [Expense]
-    
-    init(
-        _ name: String,
-        id: UUID = UUID(),
-        expenseCategories: [String] = Budget.defaultExpenseCategories,
-        expenses: [Expense] = [])
-    {
-        self.id = id
+    init(name: String) {
         self.name = name
-        self.expenseCategories = expenseCategories
-        self.expenses = expenses
+    }
+}
+
+// Represents a single recurring expense item within a budget.
+@Model
+final class BudgetItem {
+    var name: String // e.g., "Rent", "Netflix", "Groceries"
+    var amount: Double
+    // We can reuse the same category enum from the Expense model.
+    var category: Expense.ExpenseCategory
+    var frequency: BudgetFrequency
+    var budget: Budget?
+
+    init(name: String, amount: Double, category: Expense.ExpenseCategory, frequency: BudgetFrequency) {
+        self.name = name
+        self.amount = amount
+        self.category = category
+        self.frequency = frequency
+    }
+    
+    func convertedAmount(to newFrequency: BudgetFrequency) -> Double {
+        // 1. Convert the item's current amount to its annual equivalent.
+        let annualAmount = self.amount * self.frequency.annualMultiplier
+        
+        // 2. Convert the annual amount to the new frequency.
+        return annualAmount / newFrequency.annualMultiplier
+    }
+}
+
+extension BudgetItem {
+    enum BudgetFrequency: String, Codable, CaseIterable {
+        case weekly = "Weekly"
+        case biweekly = "Biweekly"
+        case monthly = "Monthly"
+        case quarterly = "Quarterly"
+        case annually = "Annually"
+
+        // This helper property makes conversions easy
+        var annualMultiplier: Double {
+            switch self {
+            case .weekly:
+                return 52.0
+            case .biweekly:
+                return 26.0
+            case .monthly:
+                return 12.0
+            case .quarterly:
+                return 4.0
+            case .annually:
+                return 1.0
+            }
+        }
     }
 }
