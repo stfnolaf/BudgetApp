@@ -7,12 +7,12 @@
 
 import SwiftUI
 
-struct ExpenseView: View {
+struct ExpenseTrackingView: View {
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        Text("Expense Tracking coming soon...")
     }
 }
 
 #Preview {
-    ExpenseView()
+    ExpenseTrackingView()
 }

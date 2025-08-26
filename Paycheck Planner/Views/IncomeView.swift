@@ -6,11 +6,10 @@
 //
 
 import SwiftUI
-import SwiftData
 
 struct IncomeView: View {
     var body: some View {
-        
+        Text("Income coming soon...")
     }
 }
 

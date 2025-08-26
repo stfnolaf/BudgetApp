@@ -86,7 +86,7 @@ struct BudgetEditingView: View {
             VStack {
                 Divider()
                 HStack {
-                    Text("Total Expenditures")
+                    Text("Planned Expenditures")
                         .font(.headline)
                     Spacer()
                     Text("$\(totalMonthlyExpenditures, specifier: "%.2f")")

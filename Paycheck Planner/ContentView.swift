@@ -36,7 +36,7 @@ struct ContentView: View {
             BudgetView(budget: workingBudget)
                 .tabItem { Label("Budget", systemImage: "list.bullet.rectangle") }
                 .tag(Tab.budget)
-            ExpenseView()
+            ExpenseTrackingView()
                 .tabItem { Label("Track", systemImage: "creditcard") }
                 .tag(Tab.track)
             GrowView()
