@@ -47,7 +47,7 @@ struct ContentView: View {
                 .tag(Tab.income)
         }
         .task {
-            await setupInitialData()
+            setupInitialData()
         }
         .environment(\.workingBudget, $workingBudget)
         .environment(\.currentUser, user)
@@ -65,34 +65,13 @@ struct ContentView: View {
         }
     }
     
-    private func setupInitialData() async {
+    private func setupInitialData() {
         if users.isEmpty {
-            await setupInitialUser()
+            modelContext.insert(User())
         }
         
         if let user = self.user {
             loadWorkingBudget(for: user)
-        }
-    }
-    
-    private func setupInitialUser() async {
-        do {
-            let fetchDescriptor = FetchDescriptor<User>()
-            if try modelContext.fetchCount(fetchDescriptor) == 0 {
-                let newUser = User()
-                // Create and link the default categories
-                let defaultCategoryNames = ["Housing", "Food", "Transportation", "Utilities", "Personal"]
-                for name in defaultCategoryNames {
-                    let category = ExpenseCategory(name: name)
-                    newUser.expenseCategories.append(category)
-                    // This links the category to the user
-                    category.user = newUser
-                    modelContext.insert(category)
-                }
-                modelContext.insert(newUser)
-            }
-        } catch {
-            print("Failed to set up initial user and categories: \(error)")
         }
     }
 

@@ -3,7 +3,7 @@ import SwiftData
 
 struct NewExpenseView: View {
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.currentUser) private var user
+    @Environment(\.workingBudget) private var workingBudget
     
     @State private var title: String = ""
     @State private var amount: Double = 0.0
@@ -19,7 +19,7 @@ struct NewExpenseView: View {
                     TextField("Amount", value: $amount, format: .currency(code: "USD"))
                         .keyboardType(.decimalPad)
                     Picker("Category", selection: $selectedCategory) {
-                        ForEach(user!.expenseCategories.sorted(by: { $0.name > $1.name }), id: \.self) { category in
+                        ForEach(workingBudget.wrappedValue!.expenseCategories.sorted(by: { $0.name > $1.name }), id: \.self) { category in
                             Text(category.name).tag(category)
                         }
                     }

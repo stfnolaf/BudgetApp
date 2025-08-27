@@ -10,8 +10,19 @@ import SwiftData
 
 @Model
 final class ExpenseCategory {
-    @Attribute(.unique) var name: String
-    var user: User?
+    var name: String
+    var budget: Budget?
+    
+    @Relationship(inverse: \Expense.category) var expenses: [Expense] = []
+    @Relationship(inverse: \BudgetItem.category) var budgetItems: [BudgetItem] = []
+    
+    var totalBudgetedAmount: Double {
+        budgetItems.reduce(0) { $0 + $1.convertedAmount(to: .monthly) }
+    }
+        
+    var totalSpentAmount: Double {
+        expenses.reduce(0) { $0 + $1.amount }
+    }
     
     init(name: String) {
         self.name = name
@@ -23,11 +34,11 @@ final class ExpenseCategory {
 final class Expense {
     var name: String
     var amount: Double
-    var category: ExpenseCategory
+    @Relationship(deleteRule: .nullify) var category: ExpenseCategory?
     var date: Date
     var user: User?
 
-    init(name: String, amount: Double, category: ExpenseCategory, date: Date) {
+    init(name: String, amount: Double, category: ExpenseCategory?, date: Date) {
         self.name = name
         self.amount = amount
         self.category = category
@@ -40,6 +51,8 @@ final class Expense {
 final class Budget {
     @Attribute(.unique) var name: String // e.g., "Monthly Minimums", "Ideal Spending Plan"
     var user: User?
+    
+    @Relationship(deleteRule: .cascade) var expenseCategories: [ExpenseCategory] = []
     @Relationship(deleteRule: .cascade) var items: [BudgetItem] = []
 
     init(name: String) {
@@ -53,11 +66,11 @@ final class BudgetItem {
     var name: String // e.g., "Rent", "Netflix", "Groceries"
     var amount: Double
     // We can reuse the same category enum from the Expense model.
-    var category: ExpenseCategory
+    @Relationship(deleteRule: .nullify) var category: ExpenseCategory?
     var frequency: BudgetFrequency
     var budget: Budget?
 
-    init(name: String, amount: Double, category: ExpenseCategory, frequency: BudgetFrequency) {
+    init(name: String, amount: Double, category: ExpenseCategory?, frequency: BudgetFrequency) {
         self.name = name
         self.amount = amount
         self.category = category

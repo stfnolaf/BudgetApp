@@ -55,7 +55,6 @@ struct CategorySectionView: View {
 
 struct BudgetView: View {
     @Environment(\.workingBudget) private var workingBudget
-    @Environment(\.currentUser) private var currentUser
     @State private var showingNewExpenseSheet = false
     @State private var expandedCategories: Set<String> = []
 
@@ -83,11 +82,11 @@ struct BudgetView: View {
                     .padding([.top, .horizontal])
                 }
                 Spacer()
-                if let user = currentUser, let budget = workingBudget.wrappedValue {
+                if let budget = workingBudget.wrappedValue {
                     VStack {
                         List {
-                            ForEach(user.expenseCategories.sorted(by: {$0.name < $1.name }), id: \.self) { category in
-                                let categoryExpenses = workingBudget.wrappedValue!.items.filter {$0.category == category}
+                            ForEach(budget.expenseCategories.sorted(by: {$0.totalBudgetedAmount > $1.totalBudgetedAmount }), id: \.self) { category in
+                                let categoryExpenses = budget.items.filter {$0.category == category}
                                 CategorySectionView(
                                     category: category,
                                     expenses: categoryExpenses,
