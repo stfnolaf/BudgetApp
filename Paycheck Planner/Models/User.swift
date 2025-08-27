@@ -14,6 +14,7 @@ final class User {
     // Using '@Relationship(deleteRule: .cascade)' ensures that when a User is deleted,
     // all of their associated financial data is also automatically deleted.
     @Relationship(deleteRule: .cascade) var incomeStreams: [IncomeStream] = []
+    @Relationship(deleteRule: .cascade) var expenseCategories: [ExpenseCategory] = []
     @Relationship(deleteRule: .cascade) var expenses: [Expense] = []
     @Relationship(deleteRule: .cascade) var investments: [Investment] = []
     @Relationship(deleteRule: .cascade) var budgets: [Budget] = []

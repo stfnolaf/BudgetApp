@@ -3,10 +3,11 @@ import SwiftData
 
 struct NewExpenseView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.currentUser) private var user
     
     @State private var title: String = ""
     @State private var amount: Double = 0.0
-    @State private var selectedCategory: Expense.ExpenseCategory = .utilities
+    @State private var selectedCategory: ExpenseCategory? = nil
     @State private var selectedFrequency: BudgetItem.BudgetFrequency = .monthly
     @State private var errorMessage: String?
 
@@ -18,8 +19,8 @@ struct NewExpenseView: View {
                     TextField("Amount", value: $amount, format: .currency(code: "USD"))
                         .keyboardType(.decimalPad)
                     Picker("Category", selection: $selectedCategory) {
-                        ForEach(Expense.ExpenseCategory.allCases, id: \.self) { category in
-                            Text(category.rawValue).tag(category)
+                        ForEach(user!.expenseCategories.sorted(by: { $0.name > $1.name }), id: \.self) { category in
+                            Text(category.name).tag(category)
                         }
                     }
                     Picker("Frequency", selection: $selectedFrequency) {
@@ -55,10 +56,14 @@ struct NewExpenseView: View {
             errorMessage = "Please enter a valid amount."
             return
         }
+        guard let cat = selectedCategory else {
+            errorMessage = "Please select a category."
+            return
+        }
         let newExpense = BudgetItem(
             name: title,
             amount: amount,
-            category: selectedCategory,
+            category: cat,
             frequency: selectedFrequency
         )
         // TODO: add newExpense to model context

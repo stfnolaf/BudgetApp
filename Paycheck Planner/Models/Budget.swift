@@ -8,6 +8,16 @@
 import Foundation
 import SwiftData
 
+@Model
+final class ExpenseCategory {
+    @Attribute(.unique) var name: String
+    var user: User?
+    
+    init(name: String) {
+        self.name = name
+    }
+}
+
 // Represents a single, actual expense that has occurred.
 @Model
 final class Expense {
@@ -23,26 +33,12 @@ final class Expense {
         self.category = category
         self.date = date
     }
-    
-    // Enum for categorizing expenses, which can be useful for reporting.
-    enum ExpenseCategory: String, Codable, CaseIterable {
-        case housing = "Housing"
-        case transportation = "Transportation"
-        case food = "Food"
-        case utilities = "Utilities"
-        case insurance = "Insurance"
-        case healthcare = "Healthcare"
-        case personal = "Personal"
-        case entertainment = "Entertainment"
-        case debt = "Debt"
-        case other = "Other"
-    }
 }
 
 // Represents a user-defined budget for planning purposes.
 @Model
 final class Budget {
-    var name: String // e.g., "Monthly Minimums", "Ideal Spending Plan"
+    @Attribute(.unique) var name: String // e.g., "Monthly Minimums", "Ideal Spending Plan"
     var user: User?
     @Relationship(deleteRule: .cascade) var items: [BudgetItem] = []
 
@@ -57,11 +53,11 @@ final class BudgetItem {
     var name: String // e.g., "Rent", "Netflix", "Groceries"
     var amount: Double
     // We can reuse the same category enum from the Expense model.
-    var category: Expense.ExpenseCategory
+    var category: ExpenseCategory
     var frequency: BudgetFrequency
     var budget: Budget?
 
-    init(name: String, amount: Double, category: Expense.ExpenseCategory, frequency: BudgetFrequency) {
+    init(name: String, amount: Double, category: ExpenseCategory, frequency: BudgetFrequency) {
         self.name = name
         self.amount = amount
         self.category = category

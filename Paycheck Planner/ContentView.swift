@@ -33,7 +33,7 @@ struct ContentView: View {
             OverviewView()
                 .tabItem { Label("Overview", systemImage: "chart.pie") }
                 .tag(Tab.overview)
-            BudgetView(budget: workingBudget)
+            BudgetView()
                 .tabItem { Label("Budget", systemImage: "list.bullet.rectangle") }
                 .tag(Tab.budget)
             ExpenseTrackingView()
@@ -67,13 +67,35 @@ struct ContentView: View {
     
     private func setupInitialData() async {
         if users.isEmpty {
-            modelContext.insert(User())
+            await setupInitialUser()
         }
         
         if let user = self.user {
             loadWorkingBudget(for: user)
         }
     }
+    
+    private func setupInitialUser() async {
+        do {
+            let fetchDescriptor = FetchDescriptor<User>()
+            if try modelContext.fetchCount(fetchDescriptor) == 0 {
+                let newUser = User()
+                // Create and link the default categories
+                let defaultCategoryNames = ["Housing", "Food", "Transportation", "Utilities", "Personal"]
+                for name in defaultCategoryNames {
+                    let category = ExpenseCategory(name: name)
+                    newUser.expenseCategories.append(category)
+                    // This links the category to the user
+                    category.user = newUser
+                    modelContext.insert(category)
+                }
+                modelContext.insert(newUser)
+            }
+        } catch {
+            print("Failed to set up initial user and categories: \(error)")
+        }
+    }
+
     
     private func loadWorkingBudget(for user: User) {
         // 1. Primary Method: Try to load the specific budget from UserDefaults

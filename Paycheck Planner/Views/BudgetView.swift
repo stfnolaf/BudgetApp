@@ -9,7 +9,7 @@ import SwiftUI
 import SwiftData
 
 struct CategorySectionView: View {
-    let category: Expense.ExpenseCategory
+    let category: ExpenseCategory
     let expenses: [BudgetItem]
     @Binding var isExpanded: Bool
 
@@ -24,7 +24,7 @@ struct CategorySectionView: View {
                     Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
                         .foregroundColor(.accentColor)
                 }
-                Text(category.rawValue)
+                Text(category.name)
                     .font(.headline)
                 Spacer()
                 Text("$\(categoryTotal, specifier: "%.2f")")
@@ -53,81 +53,25 @@ struct CategorySectionView: View {
     }
 }
 
-struct BudgetEditingView: View {
-    let budget: Budget
+struct BudgetView: View {
+    @Environment(\.workingBudget) private var workingBudget
+    @Environment(\.currentUser) private var currentUser
     @State private var showingNewExpenseSheet = false
     @State private var expandedCategories: Set<String> = []
 
-    var totalMonthlyExpenditures: Double {
-        budget.items.reduce(0) { $0 + $1.convertedAmount(to: .monthly) }
+    private var totalMonthlyExpenditures: Double {
+        guard let budget = workingBudget.wrappedValue else { return 0.0 }
+        return budget.items.reduce(0) { $0 + $1.convertedAmount(to: .monthly) }
     }
-    var body: some View {
-        VStack {
-            List {
-                ForEach(Expense.ExpenseCategory.allCases, id: \.self) { category in
-                    let categoryExpenses = budget.items.filter {$0.category == category}
-                    CategorySectionView(
-                        category: category,
-                        expenses: categoryExpenses,
-                        isExpanded: Binding(
-                            get: { expandedCategories.contains(category.rawValue) },
-                            set: { isExpanded in
-                                if isExpanded {
-                                    expandedCategories.insert(category.rawValue)
-                                } else {
-                                    expandedCategories.remove(category.rawValue)
-                                }
-                            }
-                        )
-                    )
-                }
-            }
-            .listStyle(.inset)
-            VStack {
-                Divider()
-                HStack {
-                    Text("Planned Expenditures")
-                        .font(.headline)
-                    Spacer()
-                    Text("$\(totalMonthlyExpenditures, specifier: "%.2f")")
-                        .font(.headline)
-                        .foregroundColor(.accentColor)
-                }
-                .padding([.horizontal, .bottom])
-                Button(action: {
-                    showingNewExpenseSheet = true
-                }) {
-                    HStack {
-                        Image(systemName: "plus.circle.fill")
-                        Text("New Expense")
-                            .fontWeight(.semibold)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.accentColor.opacity(0.15))
-                    .cornerRadius(12)
-                }
-                .padding(.horizontal)
-                .padding(.bottom, 8)
-            }
-        }
-        .sheet(isPresented: $showingNewExpenseSheet) {
-            NewExpenseView()
-        }
-    }
-}
-
-struct BudgetView: View {
-    let budget: Budget?
-    @State private var showBudgetSelection = false
     
+    @State private var showBudgetSelection = false
     @State private var budgetFrequency: BudgetItem.BudgetFrequency = .monthly
 
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
-                    Text(budget?.name ?? "")
+                    Text(workingBudget.wrappedValue?.name ?? "")
                         .font(.title2)
                         .fontWeight(.bold)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -139,8 +83,59 @@ struct BudgetView: View {
                     .padding([.top, .horizontal])
                 }
                 Spacer()
-                if let workingBudget = budget {
-                    BudgetEditingView(budget: workingBudget)
+                if let user = currentUser, let budget = workingBudget.wrappedValue {
+                    VStack {
+                        List {
+                            ForEach(user.expenseCategories.sorted(by: {$0.name < $1.name }), id: \.self) { category in
+                                let categoryExpenses = workingBudget.wrappedValue!.items.filter {$0.category == category}
+                                CategorySectionView(
+                                    category: category,
+                                    expenses: categoryExpenses,
+                                    isExpanded: Binding(
+                                        get: { expandedCategories.contains(category.name) },
+                                        set: { isExpanded in
+                                            if isExpanded {
+                                                expandedCategories.insert(category.name)
+                                            } else {
+                                                expandedCategories.remove(category.name)
+                                            }
+                                        }
+                                    )
+                                )
+                            }
+                        }
+                        .listStyle(.inset)
+                        VStack {
+                            Divider()
+                            HStack {
+                                Text("Planned Expenditures")
+                                    .font(.headline)
+                                Spacer()
+                                Text("$\(totalMonthlyExpenditures, specifier: "%.2f")")
+                                    .font(.headline)
+                                    .foregroundColor(.accentColor)
+                            }
+                            .padding([.horizontal, .bottom])
+                            Button(action: {
+                                showingNewExpenseSheet = true
+                            }) {
+                                HStack {
+                                    Image(systemName: "plus.circle.fill")
+                                    Text("New Expense")
+                                        .fontWeight(.semibold)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.accentColor.opacity(0.15))
+                                .cornerRadius(12)
+                            }
+                            .padding(.horizontal)
+                            .padding(.bottom, 8)
+                        }
+                    }
+                    .sheet(isPresented: $showingNewExpenseSheet) {
+                        NewExpenseView()
+                    }
                 } else {
                     VStack {
                         Text("No budgets created yet!")
@@ -167,12 +162,5 @@ struct BudgetView: View {
 }
 
 #Preview {
-    let budget = Budget(name: "Monthly Essentials")
-    
-    let rent = BudgetItem(name: "Rent", amount: 2200, category: .housing, frequency: .monthly)
-    let groceries = BudgetItem(name: "Groceries", amount: 450, category: .food, frequency: .monthly)
-    let internet = BudgetItem(name: "Internet", amount: 80, category: .utilities, frequency: .monthly)
-    
-    budget.items = [rent, groceries, internet]
-    return BudgetView(budget: budget)
+    BudgetView()
 }
