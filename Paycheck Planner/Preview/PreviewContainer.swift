@@ -42,13 +42,12 @@ extension ModelContainer {
             budget.expenseCategories = [housing, food, utilities]
 
             let rent = BudgetItem(name: "Rent", amount: 2200, category: housing, frequency: .monthly)
-            rent.budget = budget
             
             let groceries = BudgetItem(name: "Groceries", amount: 450, category: food, frequency: .monthly)
-            groceries.budget = budget
             
             let internet = BudgetItem(name: "Internet", amount: 80, category: utilities, frequency: .monthly)
-            internet.budget = budget
+            
+            budget.items = [rent, groceries, internet]
             
             context.insert(user)
             context.insert(budget)

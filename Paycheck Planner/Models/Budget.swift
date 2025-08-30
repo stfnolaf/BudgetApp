@@ -67,9 +67,8 @@ final class BudgetItem {
     var amount: Double
     // We can reuse the same category enum from the Expense model.
     @Relationship(deleteRule: .nullify) var category: ExpenseCategory?
+    @Relationship(inverse: \Budget.items) var budget: Budget?
     var frequency: BudgetFrequency
-    var budget: Budget?
-
     init(name: String, amount: Double, category: ExpenseCategory?, frequency: BudgetFrequency) {
         self.name = name
         self.amount = amount

@@ -1,31 +1,35 @@
 import SwiftUI
 import SwiftData
 
-struct NewExpenseView: View {
+struct NewBudgetItemView: View {
+    let budget: Budget
+    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.workingBudget) private var workingBudget
     
-    @State private var title: String = ""
+    @State private var name: String = ""
     @State private var amount: Double = 0.0
     @State private var selectedCategory: ExpenseCategory? = nil
     @State private var selectedFrequency: BudgetItem.BudgetFrequency = .monthly
     @State private var errorMessage: String?
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
-                Section(header: Text("Expense Details")) {
-                    TextField("Title", text: $title)
+                Section("Expense Details") {
+                    TextField("Name (e.g. Rent, Gas)", text: $name)
                     TextField("Amount", value: $amount, format: .currency(code: "USD"))
                         .keyboardType(.decimalPad)
-                    Picker("Category", selection: $selectedCategory) {
-                        ForEach(workingBudget.wrappedValue!.expenseCategories.sorted(by: { $0.name > $1.name }), id: \.self) { category in
-                            Text(category.name).tag(category)
-                        }
-                    }
                     Picker("Frequency", selection: $selectedFrequency) {
                         ForEach(BudgetItem.BudgetFrequency.allCases, id: \.self) { freq in
                             Text(freq.rawValue).tag(freq)
+                        }
+                    }
+                }
+                Section("Category") {
+                    Picker("Select a Category", selection: $selectedCategory) {
+                        Text("None").tag(nil as ExpenseCategory?)
+                        ForEach(budget.expenseCategories.sorted(by: {$0.name < $1.name})) {category in
+                            Text(category.name).tag(category as ExpenseCategory?)
                         }
                     }
                 }
@@ -37,40 +41,36 @@ struct NewExpenseView: View {
                 }
             }
             .navigationTitle("New Expense")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Add") {
-                        addExpense()
+                        saveBudgetItem()
                     }
-                    .disabled(title.isEmpty || amount <= 0)
+                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || amount <= 0)
                 }
             }
         }
     }
 
-    private func addExpense() {
-        guard amount >= 0 else {
-            errorMessage = "Please enter a valid amount."
-            return
-        }
-        guard let cat = selectedCategory else {
-            errorMessage = "Please select a category."
-            return
-        }
-        let newExpense = BudgetItem(
-            name: title,
+    private func saveBudgetItem() {
+        let newBudgetItem = BudgetItem(
+            name: name,
             amount: amount,
-            category: cat,
+            category: selectedCategory,
             frequency: selectedFrequency
         )
-        // TODO: add newExpense to model context
+        
+        newBudgetItem.budget = budget
+        
+        modelContext.insert(newBudgetItem)
         dismiss()
     }
 }
 
 #Preview {
-    NewExpenseView()
+    NewBudgetItemView(budget: Budget.forPreview)
 }

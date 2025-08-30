@@ -33,7 +33,7 @@ struct ContentView: View {
             OverviewView()
                 .tabItem { Label("Overview", systemImage: "chart.pie") }
                 .tag(Tab.overview)
-            BudgetView()
+            BudgetContainerView()
                 .tabItem { Label("Budget", systemImage: "list.bullet.rectangle") }
                 .tag(Tab.budget)
             ExpenseTrackingView()
