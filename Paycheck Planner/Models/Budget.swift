@@ -32,11 +32,11 @@ final class ExpenseCategory {
 
 extension ExpenseCategory: Hashable {
     static func == (lhs: ExpenseCategory, rhs: ExpenseCategory) -> Bool {
-        lhs.persistentModelID == rhs.persistentModelID
+        lhs === rhs
     }
     
     func hash(into hasher: inout Hasher) {
-        hasher.combine(persistentModelID)
+        hasher.combine(ObjectIdentifier(self))
     }
 }
 
