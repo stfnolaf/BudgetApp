@@ -13,10 +13,11 @@ import SwiftData
 final class User {
     // Using '@Relationship(deleteRule: .cascade)' ensures that when a User is deleted,
     // all of their associated financial data is also automatically deleted.
-    @Relationship(deleteRule: .cascade) var incomeStreams: [IncomeStream] = []
-    @Relationship(deleteRule: .cascade) var expenses: [Expense] = []
-    @Relationship(deleteRule: .cascade) var investments: [Investment] = []
-    @Relationship(deleteRule: .cascade) var budgets: [Budget] = []
+    @Relationship(deleteRule: .cascade, inverse: \IncomeStream.user) var incomeStreams: [IncomeStream] = []
+    @Relationship(deleteRule: .cascade, inverse: \Expense.user) var expenses: [Expense] = []
+    @Relationship(deleteRule: .cascade, inverse: \ExpenseCategory.user) var expenseCategories: [ExpenseCategory] = []
+    @Relationship(deleteRule: .cascade, inverse: \Investment.user) var investments: [Investment] = []
+    @Relationship(deleteRule: .cascade, inverse: \Budget.user) var budgets: [Budget] = []
     
     init(){}
 }

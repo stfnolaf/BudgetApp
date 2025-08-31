@@ -11,54 +11,49 @@ extension ModelContainer {
     @MainActor
     static var forPreview: ModelContainer {
         let container: ModelContainer
-        // 1. Add ExpenseCategory to the schema
         let schema = Schema([
             User.self,
-            IncomeStream.self,
-            Tax.self,
-            RetirementContribution.self,
-            Expense.self,
             Budget.self,
             BudgetItem.self,
-            Investment.self,
-            ExpenseCategory.self
+            ExpenseCategory.self,
+            Expense.self
         ])
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
         
         do {
             container = try ModelContainer(for: schema, configurations: [config])
             let context = container.mainContext
-            
-            // --- Pre-populate with sample data ---
-            
+                        
             let user = User()
+            context.insert(user)
             
             let housing = ExpenseCategory(name: "Housing")
+            housing.user = user
+            context.insert(housing)
+            
             let food = ExpenseCategory(name: "Food")
+            food.user = user
+            context.insert(food)
+            
             let utilities = ExpenseCategory(name: "Utilities")
+            utilities.user = user
+            context.insert(utilities)
                         
             let budget = Budget(name: "Monthly Essentials")
             budget.user = user
-            budget.expenseCategories = [housing, food, utilities]
+            context.insert(budget)
 
             let rent = BudgetItem(name: "Rent", amount: 2200, category: housing, frequency: .monthly)
+            rent.budget = budget
+            context.insert(rent)
             
             let groceries = BudgetItem(name: "Groceries", amount: 450, category: food, frequency: .monthly)
+            groceries.budget = budget
+            context.insert(groceries)
             
             let internet = BudgetItem(name: "Internet", amount: 80, category: utilities, frequency: .monthly)
-            
-            budget.items = [rent, groceries, internet]
-            
-            context.insert(user)
-            context.insert(budget)
-            context.insert(housing)
-            context.insert(food)
-            context.insert(utilities)
-            context.insert(rent)
-            context.insert(groceries)
+            internet.budget = budget
             context.insert(internet)
-            
-            // --- End of sample data ---
             
             return container
         } catch {

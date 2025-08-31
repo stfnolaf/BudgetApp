@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 
 struct NewBudgetItemView: View {
+    let user: User
     let budget: Budget
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -28,7 +29,7 @@ struct NewBudgetItemView: View {
                 Section("Category") {
                     Picker("Select a Category", selection: $selectedCategory) {
                         Text("None").tag(nil as ExpenseCategory?)
-                        ForEach(budget.expenseCategories.sorted(by: {$0.name < $1.name})) {category in
+                        ForEach(user.expenseCategories.sorted(by: {$0.name < $1.name}), id: \.self) {category in
                             Text(category.name).tag(category as ExpenseCategory?)
                         }
                     }
@@ -72,5 +73,7 @@ struct NewBudgetItemView: View {
 }
 
 #Preview {
-    NewBudgetItemView(budget: Budget.forPreview)
+    let budget = Budget.forPreview
+    let user = budget.user!
+    return NewBudgetItemView(user: user, budget: budget)
 }

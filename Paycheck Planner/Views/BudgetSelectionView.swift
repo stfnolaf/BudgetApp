@@ -31,7 +31,7 @@ struct BudgetSelectionView: View {
                     Image(systemName: "plus")
                 }
             }
-            .padding([.top, .horizontal])
+            .padding()
             List(budgets) { budget in
                 Button{
                     

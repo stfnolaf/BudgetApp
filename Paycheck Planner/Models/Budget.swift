@@ -11,13 +11,14 @@ import SwiftData
 @Model
 final class ExpenseCategory {
     var name: String
-    var budget: Budget?
+    var user: User?
     
     @Relationship(inverse: \Expense.category) var expenses: [Expense] = []
     @Relationship(inverse: \BudgetItem.category) var budgetItems: [BudgetItem] = []
     
-    var totalBudgetedAmount: Double {
-        budgetItems.reduce(0) { $0 + $1.convertedAmount(to: .monthly) }
+    func totalBudgetedAmount(for budget: Budget, frequency: BudgetItem.BudgetFrequency) -> Double {
+        budgetItems.filter { $0.budget == budget}
+            .reduce(0) { $0 + $1.convertedAmount(to: frequency)}
     }
         
     var totalSpentAmount: Double {
@@ -26,6 +27,16 @@ final class ExpenseCategory {
     
     init(name: String) {
         self.name = name
+    }
+}
+
+extension ExpenseCategory: Hashable {
+    static func == (lhs: ExpenseCategory, rhs: ExpenseCategory) -> Bool {
+        lhs.persistentModelID == rhs.persistentModelID
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(persistentModelID)
     }
 }
 
@@ -49,11 +60,10 @@ final class Expense {
 // Represents a user-defined budget for planning purposes.
 @Model
 final class Budget {
-    @Attribute(.unique) var name: String // e.g., "Monthly Minimums", "Ideal Spending Plan"
+    var name: String // e.g., "Monthly Minimums", "Ideal Spending Plan"
     var user: User?
     
-    @Relationship(deleteRule: .cascade) var expenseCategories: [ExpenseCategory] = []
-    @Relationship(deleteRule: .cascade) var items: [BudgetItem] = []
+    @Relationship(deleteRule: .cascade, inverse: \BudgetItem.budget) var items: [BudgetItem] = []
 
     init(name: String) {
         self.name = name
@@ -67,7 +77,7 @@ final class BudgetItem {
     var amount: Double
     // We can reuse the same category enum from the Expense model.
     @Relationship(deleteRule: .nullify) var category: ExpenseCategory?
-    @Relationship(inverse: \Budget.items) var budget: Budget?
+    var budget: Budget?
     var frequency: BudgetFrequency
     init(name: String, amount: Double, category: ExpenseCategory?, frequency: BudgetFrequency) {
         self.name = name
