@@ -10,32 +10,14 @@ import SwiftData
 
 @main
 struct Paycheck_PlannerApp: App {
-    let container: ModelContainer
+    
+    @State private var appState = AppState()
     
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(appState)
         }
-        .modelContainer(container)
-    }
-    
-    init() {
-        do {
-            let schema = Schema([
-                User.self,
-                IncomeStream.self,
-                Tax.self,
-                RetirementContribution.self,
-                Expense.self,
-                Budget.self,
-                BudgetItem.self,
-                Investment.self
-            ])
-            
-            let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-                container = try ModelContainer(for: schema, configurations: [config])
-        } catch {
-            fatalError("Failed to create ModelContainer: \(error.localizedDescription)")
-        }
+        .modelContainer(for: [Budget.self, Expense.self])
     }
 }

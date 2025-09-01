@@ -2,11 +2,15 @@ import SwiftUI
 import SwiftData
 
 struct NewBudgetItemView: View {
-    let user: User
+    // Inputs
     let budget: Budget
+    let categories: [ExpenseCategory]
+    
+    // Environment
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     
+    // States
     @State private var name: String = ""
     @State private var amount: Double = 0.0
     @State private var selectedCategory: ExpenseCategory? = nil
@@ -29,7 +33,7 @@ struct NewBudgetItemView: View {
                 Section("Category") {
                     Picker("Select a Category", selection: $selectedCategory) {
                         Text("None").tag(nil as ExpenseCategory?)
-                        ForEach(user.expenseCategories.sorted(by: {$0.name < $1.name}), id: \.self) {category in
+                        ForEach(categories.sorted(by: {$0.name < $1.name}), id: \.self) {category in
                             Text(category.name).tag(category as ExpenseCategory?)
                         }
                     }
@@ -51,7 +55,7 @@ struct NewBudgetItemView: View {
                     Button("Add") {
                         saveBudgetItem()
                     }
-                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || amount <= 0)
+                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || amount <= 0 || selectedCategory == nil)
                 }
             }
         }
@@ -61,7 +65,7 @@ struct NewBudgetItemView: View {
         let newBudgetItem = BudgetItem(
             name: name,
             amount: amount,
-            category: selectedCategory,
+            category: selectedCategory!,
             frequency: selectedFrequency
         )
         
@@ -73,7 +77,14 @@ struct NewBudgetItemView: View {
 }
 
 #Preview {
-    let budget = Budget.forPreview
-    let user = budget.user!
-    return NewBudgetItemView(user: user, budget: budget)
+    ({
+        let budget = Budget.forPreview
+        var categories: [ExpenseCategory] = []
+        for item in budget.items {
+            if !categories.contains(where: { $0 == item.category }) {
+                categories.append(item.category)
+            }
+        }
+        return NewBudgetItemView(budget: budget, categories: categories)
+    })()
 }

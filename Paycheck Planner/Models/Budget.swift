@@ -8,62 +8,20 @@
 import Foundation
 import SwiftData
 
-@Model
-final class ExpenseCategory {
-    var name: String
-    var user: User?
-    
-    @Relationship(inverse: \Expense.category) var expenses: [Expense] = []
-    @Relationship(inverse: \BudgetItem.category) var budgetItems: [BudgetItem] = []
-    
-    func totalBudgetedAmount(for budget: Budget, frequency: BudgetItem.BudgetFrequency) -> Double {
-        budgetItems.filter { $0.budget == budget}
-            .reduce(0) { $0 + $1.convertedAmount(to: frequency)}
-    }
-        
-    var totalSpentAmount: Double {
-        expenses.reduce(0) { $0 + $1.amount }
-    }
-    
-    init(name: String) {
-        self.name = name
-    }
-}
-
-extension ExpenseCategory: Hashable {
-    static func == (lhs: ExpenseCategory, rhs: ExpenseCategory) -> Bool {
-        lhs === rhs
-    }
-    
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(ObjectIdentifier(self))
-    }
-}
-
-// Represents a single, actual expense that has occurred.
-@Model
-final class Expense {
-    var name: String
-    var amount: Double
-    @Relationship(deleteRule: .nullify) var category: ExpenseCategory?
-    var date: Date
-    var user: User?
-
-    init(name: String, amount: Double, category: ExpenseCategory?, date: Date) {
-        self.name = name
-        self.amount = amount
-        self.category = category
-        self.date = date
-    }
-}
-
 // Represents a user-defined budget for planning purposes.
 @Model
 final class Budget {
-    var name: String // e.g., "Monthly Minimums", "Ideal Spending Plan"
-    var user: User?
+    @Attribute(.unique) var name: String // e.g., "Monthly Minimums", "Ideal Spending Plan"
     
     @Relationship(deleteRule: .cascade, inverse: \BudgetItem.budget) var items: [BudgetItem] = []
+    
+    func totalBudgetedExpenses(frequency: BudgetItem.BudgetFrequency) -> Double {
+        return self.items.reduce(0) { $0 + $1.convertedAmount(to: frequency) }
+    }
+    
+    func categoricalBudgetedExpenses(for category: ExpenseCategory, frequency: BudgetItem.BudgetFrequency) -> Double {
+        return self.items.filter { $0.category == category }.reduce(0) { $0 + $1.convertedAmount(to: frequency) }
+    }
 
     init(name: String) {
         self.name = name
@@ -76,10 +34,10 @@ final class BudgetItem {
     var name: String // e.g., "Rent", "Netflix", "Groceries"
     var amount: Double
     // We can reuse the same category enum from the Expense model.
-    @Relationship(deleteRule: .nullify) var category: ExpenseCategory?
+    @Relationship(deleteRule: .nullify) var category: ExpenseCategory
     var budget: Budget?
     var frequency: BudgetFrequency
-    init(name: String, amount: Double, category: ExpenseCategory?, frequency: BudgetFrequency) {
+    init(name: String, amount: Double, category: ExpenseCategory, frequency: BudgetFrequency) {
         self.name = name
         self.amount = amount
         self.category = category
@@ -87,10 +45,7 @@ final class BudgetItem {
     }
     
     func convertedAmount(to newFrequency: BudgetFrequency) -> Double {
-        // 1. Convert the item's current amount to its annual equivalent.
         let annualAmount = self.amount * self.frequency.annualMultiplier
-        
-        // 2. Convert the annual amount to the new frequency.
         return annualAmount / newFrequency.annualMultiplier
     }
 }

@@ -8,16 +8,12 @@
 extension Budget {
     /// A static, pre-configured Budget instance for use in SwiftUI previews.
     static var forPreview: Budget {
-        let user = User()
         
         let foodCategory = ExpenseCategory(name: "Food")
-        foodCategory.user = user
         
         let transportCategory = ExpenseCategory(name: "Transportation")
-        transportCategory.user = user
         
         let budget = Budget(name: "Monthly Essentials")
-        budget.user = user
 
         let groceries = BudgetItem(name: "Groceries", amount: 450, category: foodCategory, frequency: .monthly)
         groceries.budget = budget

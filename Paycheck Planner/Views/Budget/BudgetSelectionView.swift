@@ -11,7 +11,6 @@ import SwiftData
 struct BudgetSelectionView: View {
     @Query var budgets: [Budget]
     
-    @Environment(\.workingBudget) private var workingBudget
     @Environment(\.modelContext) private var modelContext
     
     @State private var showAddBudgetAlert = false
@@ -47,7 +46,7 @@ struct BudgetSelectionView: View {
                 modelContext.insert(newBudget)
                 newBudgetName = ""
                 showAddBudgetAlert = false
-                workingBudget.wrappedValue = newBudget
+                AppDefaults.saveWorkingBudgetID(newBudget.id)
             })
             Button("Cancel", role: .cancel, action: {
                 newBudgetName = ""

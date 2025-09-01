@@ -9,19 +9,10 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
-    @Query var users: [User]
+    @Environment(AppState.self) private var appState
     
-    private var user: User? {
-        users.first
-    }
-    
-    @State private var workingBudget: Budget?
-    
-    @Environment(\.modelContext) private var modelContext
-        
-    private static let lastWorkingBudgetIDKey = "lastWorkingBudgetID"
-    private static let lastWorkingIncomeIDKey = "lastWorkingIncomeID"
-        
+    @Query(sort: \Budget.name) private var budgets: [Budget]
+                
     enum Tab: Hashable {
         case overview, budget, track, grow, income
     }
@@ -29,11 +20,12 @@ struct ContentView: View {
     @State private var selectedTab: Tab = .overview
     
     var body: some View {
+        @Bindable var appState = appState
         TabView(selection: $selectedTab) {
             OverviewView()
                 .tabItem { Label("Overview", systemImage: "chart.pie") }
                 .tag(Tab.overview)
-            BudgetContainerView()
+            BudgetTabView(workingBudget: $appState.workingBudget)
                 .tabItem { Label("Budget", systemImage: "list.bullet.rectangle") }
                 .tag(Tab.budget)
             ExpenseTrackingView()
@@ -47,52 +39,20 @@ struct ContentView: View {
                 .tag(Tab.income)
         }
         .task {
-            setupInitialData()
-        }
-        .environment(\.workingBudget, $workingBudget)
-        .environment(\.currentUser, user)
-        .onChange(of: workingBudget) {
-            if let newID = workingBudget?.persistentModelID {
-                do {
-                    let data = try JSONEncoder().encode(newID)
-                    UserDefaults.standard.set(data, forKey: Self.lastWorkingBudgetIDKey)
-                } catch {
-                    print("Failed to save budget ID: \(error)")
-                }
-            } else {
-                UserDefaults.standard.removeObject(forKey: Self.lastWorkingBudgetIDKey)
-            }
+            loadWorkingBudget()
         }
     }
     
-    private func setupInitialData() {
-        if users.isEmpty {
-            modelContext.insert(User())
+    func loadWorkingBudget() {
+        guard appState.workingBudget == nil, !budgets.isEmpty else { return }
+        
+        if let savedID = AppDefaults.loadWorkingBudgetID() {
+            appState.workingBudget = budgets.first(where: { $0.id == savedID })
         }
         
-        if let user = self.user {
-            loadWorkingBudget(for: user)
+        if appState.workingBudget == nil {
+            appState.workingBudget = budgets.first
         }
-    }
-
-    
-    private func loadWorkingBudget(for user: User) {
-        // 1. Primary Method: Try to load the specific budget from UserDefaults
-        if let data = UserDefaults.standard.data(forKey: "currentBudgetID") {
-            do {
-                let budgetID = try JSONDecoder().decode(PersistentIdentifier.self, from: data)
-                // SwiftData is smart enough to find the model even without the user context
-                if let budget = modelContext.model(for: budgetID) as? Budget {
-                    self.workingBudget = budget
-                    return // Success!
-                }
-            } catch {
-                print("Failed to decode or find saved budget: \(error)")
-            }
-        }
-
-        // 2. Fallback Method: Grab the first budget directly from the user's list
-        self.workingBudget = user.budgets.first
     }
 }
 

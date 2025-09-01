@@ -9,39 +9,22 @@ import SwiftUI
 import SwiftData
 
 struct BudgetView: View {
-    let user: User
+    // Inputs
     let budget: Budget
-    @Binding var expandedCategories: Set<String>
-    var onSelectBudget: () -> Void
-    
-    var onDeleteItem: (IndexSet, ExpenseCategory) -> Void
-    
-    @State private var showingNewExpenseSheet = false
+    let categories: [ExpenseCategory]
 
-    private var totalMonthlyExpenditures: Double {
-        budget.items.reduce(0) { $0 + $1.convertedAmount(to: .monthly) }
-    }
+    // State
+    @State private var expandedCategories: Set<String> = []
+    @State private var showNewExpenseSheet: Bool = false
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                Text(budget.name)
-                    .font(.title2)
-                    .fontWeight(.bold)
-                Spacer()
-                Button(action: {
-                    onSelectBudget()
-                }) {
-                    Image(systemName: "list.bullet")
-                }
-            }
-            .padding()
+        VStack(alignment: .center, spacing: 0) {
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 20) {
-                    ForEach(user.expenseCategories.sorted(by: {$0.totalBudgetedAmount(for: budget, frequency: .monthly) > $1.totalBudgetedAmount(for: budget, frequency: .monthly) }), id: \.self) { category in
+                LazyVStack(alignment: .center, spacing: 20) {
+                    ForEach(categories.sorted(by: {budget.categoricalBudgetedExpenses(for: $0, frequency: .monthly) > budget.categoricalBudgetedExpenses(for: $1, frequency: .monthly) }), id: \.self) { category in
                         let itemsForCategory = budget.items.filter {$0.category == category}
-                        CategorySectionView(
-                            category: category,
+                        BudgetCategorySectionView(
+                            categoryName: category.name,
                             budgetItems: itemsForCategory,
                             isExpanded: Binding(
                                 get: { expandedCategories.contains(category.name) },
@@ -54,7 +37,7 @@ struct BudgetView: View {
                                 }
                             ),
                             onDeleteItem: { offsets in
-                                self.onDeleteItem(offsets, category)
+                                
                             }
                         )
                     }
@@ -67,13 +50,13 @@ struct BudgetView: View {
                     Text("Planned Expenditures")
                         .font(.headline)
                     Spacer()
-                    Text("$\(totalMonthlyExpenditures, specifier: "%.2f")")
+                    Text("$\(budget.totalBudgetedExpenses(frequency: .monthly), specifier: "%.2f")")
                         .font(.headline)
                         .foregroundColor(.accentColor)
                 }
                 .padding()
                 Button(action: {
-                    showingNewExpenseSheet = true
+                    showNewExpenseSheet = true
                 }) {
                     HStack {
                         Image(systemName: "plus.circle.fill")
@@ -89,16 +72,21 @@ struct BudgetView: View {
                 .padding(.bottom, 8)
             }
         }
-        .sheet(isPresented: $showingNewExpenseSheet) {
-            NewBudgetItemView(user: user, budget: budget)
+        .sheet(isPresented: $showNewExpenseSheet) {
+            NewBudgetItemView(budget: budget, categories: categories)
         }
     }
 }
 
-// The PREVIEW for the container is the one that needs the complex setup.
 #Preview {
-    @Previewable @State var expandedCategories: Set<String> = []
-    let budget = Budget.forPreview
-    let user = budget.user!
-    return BudgetView(user: user, budget: budget, expandedCategories: $expandedCategories, onSelectBudget: {}, onDeleteItem: {offsets, category in })
+    ({
+        let budget = Budget.forPreview
+        var categories: [ExpenseCategory] = []
+        for item in budget.items {
+            if !categories.contains(where: { $0 == item.category }) {
+                categories.append(item.category)
+            }
+        }
+        return BudgetView(budget: budget, categories: categories)
+    })()
 }

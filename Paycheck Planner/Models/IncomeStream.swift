@@ -13,8 +13,6 @@ final class IncomeStream {
     var name: String
     var amount: Double
     var payFrequency: PayFrequency
-    // A user can have multiple income streams.
-    var user: User?
 
     // Each income stream will have its own set of taxes and retirement contributions.
     @Relationship(deleteRule: .cascade) var taxes: [Tax] = []
@@ -55,7 +53,6 @@ final class Investment {
     var accountName: String
     var currentBalance: Double
     var annualGrowthRate: Double // Expected annual growth as a decimal
-    var user: User?
 
     init(accountName: String, currentBalance: Double, annualGrowthRate: Double) {
         self.accountName = accountName

@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-struct CategorySectionView: View {
-    let category: ExpenseCategory
+struct BudgetCategorySectionView: View {
+    let categoryName: String
     let budgetItems: [BudgetItem]
     @Binding var isExpanded: Bool
     
@@ -26,7 +26,7 @@ struct CategorySectionView: View {
                         .font(.system(size: 14, weight: .medium))
                         .rotationEffect(.degrees(isExpanded ? 90 : 0))
                 }
-                Text(category.name)
+                Text(categoryName)
                     .font(.headline)
                 Spacer()
                 Text("$\(categoryTotal, specifier: "%.2f")")
@@ -75,4 +75,9 @@ struct CategorySectionView: View {
         .listRowSeparator(.hidden)
         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
     }
+}
+
+#Preview {
+    @Previewable @State var isExpanded = true
+    BudgetCategorySectionView(categoryName: "Test Category", budgetItems: [], isExpanded: $isExpanded, onDeleteItem: {_ in })
 }

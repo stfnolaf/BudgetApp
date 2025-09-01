@@ -6,29 +6,47 @@
 //
 
 import SwiftUI
+import SwiftData
 
-struct BudgetContainerView: View {
-    @Environment(\.currentUser) private var currentUser
-    @Environment(\.workingBudget) private var workingBudget
+// This should handle all functionality regarding modifying appState.workingBudget ("smart").
+// All child views should be "dumb" and have no functionality.
+struct BudgetTabView: View {
+    // Inputs
+    @Binding var workingBudget: Budget?
+    
+    // SwiftData
+    @Query var categories: [ExpenseCategory]
+    @Query var budgets: [Budget]
+    
+    // Environment
     @Environment(\.modelContext) private var modelContext
-    @State private var expandedCategories: Set<String> = []
+    
+    // States
     @State private var showBudgetSelectionSheet = false
 
     var body: some View {
         // It contains the logic to decide which view to show.
-        if let user = currentUser, let budget = workingBudget.wrappedValue {
-            // If a budget is selected, it passes the data down to the dumb view.
-            BudgetView(
-                user: user,
-                budget: budget,
-                expandedCategories: $expandedCategories,
-                onSelectBudget: {
-                    showBudgetSelectionSheet = true
-                },
-                onDeleteItem: { offsets, category in
-                    deleteItem(at: offsets, in: category, for: budget)
+        if let budget = workingBudget {
+            // header
+            VStack(alignment: .center, spacing: 0) {
+                HStack {
+                    Text(budget.name)
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    Spacer()
+                    Button(action: {
+                        showBudgetSelectionSheet = true
+                    }) {
+                        Image(systemName: "list.bullet")
+                    }
                 }
-            )
+                .padding()
+                // category view list
+                BudgetView(
+                    budget: budget,
+                    categories: categories
+                )
+            }
             .sheet(isPresented: $showBudgetSelectionSheet) {
                 BudgetSelectionView()
             }
@@ -55,12 +73,18 @@ struct BudgetContainerView: View {
             }
         }
     }
-
-    private func deleteItem(at offsets: IndexSet, in category: ExpenseCategory, for budget: Budget) {
+    
+    private func deleteBudgetItem(at offsets: IndexSet, in category: ExpenseCategory, for budget: Budget) {
         let itemsForCategory = budget.items.filter { $0.category == category }
         for index in offsets {
             let itemToDelete = itemsForCategory[index]
             modelContext.delete(itemToDelete)
         }
     }
+}
+
+#Preview {
+    @Previewable @State var workingBudget: Budget? = Budget.forPreview
+    BudgetTabView(workingBudget: $workingBudget)
+        .modelContainer(ModelContainer.forPreview)
 }
