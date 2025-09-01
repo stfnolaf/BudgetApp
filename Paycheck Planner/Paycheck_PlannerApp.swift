@@ -11,6 +11,7 @@ import SwiftData
 @main
 struct Paycheck_PlannerApp: App {
     
+    
     @State private var appState = AppState()
     
     var body: some Scene {
@@ -19,5 +20,9 @@ struct Paycheck_PlannerApp: App {
                 .environment(appState)
         }
         .modelContainer(for: [Budget.self, Expense.self])
+    }
+    
+    init() {
+        
     }
 }

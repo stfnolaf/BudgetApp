@@ -9,11 +9,14 @@ import SwiftUI
 import SwiftData
 
 struct BudgetSelectionView: View {
-    @Query var budgets: [Budget]
-    
+    let budgets: [Budget]
+    @Binding var showAddBudgetAlert: Bool
+    let onCreateNewBudget: ((String) -> Void)
+
+    @Environment(AppState.self) private var appState
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
     
-    @State private var showAddBudgetAlert = false
     @State private var newBudgetName = ""
     
     var body: some View {
@@ -33,7 +36,8 @@ struct BudgetSelectionView: View {
             .padding()
             List(budgets) { budget in
                 Button{
-                    
+                    appState.workingBudgetID = budget.id
+                    dismiss()
                 } label: {
                     Text(budget.name)
                 }
@@ -42,11 +46,9 @@ struct BudgetSelectionView: View {
         .alert("New Budget", isPresented: $showAddBudgetAlert, actions: {
             TextField("List Name", text: $newBudgetName)
             Button("Create", action: {
-                let newBudget = Budget(name: newBudgetName)
-                modelContext.insert(newBudget)
+                onCreateNewBudget(newBudgetName)
                 newBudgetName = ""
                 showAddBudgetAlert = false
-                AppDefaults.saveWorkingBudgetID(newBudget.id)
             })
             Button("Cancel", role: .cancel, action: {
                 newBudgetName = ""
@@ -54,9 +56,4 @@ struct BudgetSelectionView: View {
             })
         })
     }
-}
-
-#Preview {
-    return BudgetSelectionView()
-        .modelContainer(.forPreview)
 }

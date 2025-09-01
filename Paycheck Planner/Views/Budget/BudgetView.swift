@@ -12,6 +12,7 @@ struct BudgetView: View {
     // Inputs
     let budget: Budget
     let categories: [ExpenseCategory]
+    let onAddBudgetItem: (String, Budget, ExpenseCategory, Double, BudgetItem.BudgetFrequency) -> Void
 
     // State
     @State private var expandedCategories: Set<String> = []
@@ -47,7 +48,7 @@ struct BudgetView: View {
             .background(.ultraThinMaterial)
             VStack {
                 HStack {
-                    Text("Planned Expenditures")
+                    Text("Fixed Expenses")
                         .font(.headline)
                     Spacer()
                     Text("$\(budget.totalBudgetedExpenses(frequency: .monthly), specifier: "%.2f")")
@@ -73,7 +74,7 @@ struct BudgetView: View {
             }
         }
         .sheet(isPresented: $showNewExpenseSheet) {
-            NewBudgetItemView(budget: budget, categories: categories)
+            NewBudgetItemView(budget: budget, categories: categories, onCreate: onAddBudgetItem)
         }
     }
 }
@@ -87,6 +88,6 @@ struct BudgetView: View {
                 categories.append(item.category)
             }
         }
-        return BudgetView(budget: budget, categories: categories)
+        return BudgetView(budget: budget, categories: categories, onAddBudgetItem: { name, budget, category, amount, frequency in })
     })()
 }

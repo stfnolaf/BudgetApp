@@ -47,11 +47,11 @@ struct BudgetCategorySectionView: View {
                         .foregroundColor(.secondary)
                         .padding(.leading)
                 } else {
-                    ForEach(budgetItems.sorted(by: {$0.amount > $1.amount}), id: \.persistentModelID) { expense in
+                    ForEach(budgetItems.sorted(by: {$0.convertedAmount(to: .monthly) > $1.convertedAmount(to: .monthly)}), id: \.persistentModelID) { expense in
                         HStack {
                             Text(expense.name)
                             Spacer()
-                            Text("$\(expense.amount, specifier: "%.2f")")
+                            Text("$\(expense.convertedAmount(to: .monthly), specifier: "%.2f")")
                                 .foregroundColor(.secondary)
                         }
                         .padding(.leading)

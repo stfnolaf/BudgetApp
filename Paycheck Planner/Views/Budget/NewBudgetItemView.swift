@@ -5,6 +5,7 @@ struct NewBudgetItemView: View {
     // Inputs
     let budget: Budget
     let categories: [ExpenseCategory]
+    let onCreate: (String, Budget, ExpenseCategory, Double, BudgetItem.BudgetFrequency) -> Void
     
     // Environment
     @Environment(\.modelContext) private var modelContext
@@ -53,26 +54,13 @@ struct NewBudgetItemView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Add") {
-                        saveBudgetItem()
+                        onCreate(name, budget, selectedCategory!, amount, selectedFrequency)
+                        dismiss()
                     }
                     .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || amount <= 0 || selectedCategory == nil)
                 }
             }
         }
-    }
-
-    private func saveBudgetItem() {
-        let newBudgetItem = BudgetItem(
-            name: name,
-            amount: amount,
-            category: selectedCategory!,
-            frequency: selectedFrequency
-        )
-        
-        newBudgetItem.budget = budget
-        
-        modelContext.insert(newBudgetItem)
-        dismiss()
     }
 }
 
@@ -85,6 +73,6 @@ struct NewBudgetItemView: View {
                 categories.append(item.category)
             }
         }
-        return NewBudgetItemView(budget: budget, categories: categories)
+        return NewBudgetItemView(budget: budget, categories: categories, onCreate: { name, budget, category, amount, frequency in })
     })()
 }

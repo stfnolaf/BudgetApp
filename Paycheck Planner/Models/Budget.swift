@@ -33,8 +33,7 @@ final class Budget {
 final class BudgetItem {
     var name: String // e.g., "Rent", "Netflix", "Groceries"
     var amount: Double
-    // We can reuse the same category enum from the Expense model.
-    @Relationship(deleteRule: .nullify) var category: ExpenseCategory
+    var category: ExpenseCategory
     var budget: Budget?
     var frequency: BudgetFrequency
     init(name: String, amount: Double, category: ExpenseCategory, frequency: BudgetFrequency) {

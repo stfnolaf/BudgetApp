@@ -7,20 +7,16 @@
 
 import Foundation
 import SwiftUI
+import SwiftData
 
 @Observable class AppState {
-    @ObservationIgnored private var _workingBudget: Budget? = nil
-    var workingBudget: Budget? {
-        set {
-            _workingBudget = newValue
-            if let budget = newValue {
-                AppDefaults.saveWorkingBudgetID(budget.id)
+    var workingBudgetID: PersistentIdentifier? {
+        didSet {
+            if let budgetID = workingBudgetID {
+                AppDefaults.saveWorkingBudgetID(budgetID)
             } else {
                 AppDefaults.clearWorkingBudgetID()
             }
-        }
-        get {
-            return _workingBudget
         }
     }
 }
