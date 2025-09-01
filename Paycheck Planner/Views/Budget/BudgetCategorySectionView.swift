@@ -62,15 +62,15 @@ struct BudgetCategorySectionView: View {
             }
         }
         .padding()
-        .background {
-            if isExpanded {
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(Color(.white))
-            } else {
-                Capsule()
-                    .fill(Color(.white))
-            }
-        }
+//        .background {
+//            if isExpanded {
+//                RoundedRectangle(cornerRadius: 20, style: .continuous)
+//                    .fill(Color(.white))
+//            } else {
+//                Capsule()
+//                    .fill(Color(.white))
+//            }
+//        }
         
         .listRowSeparator(.hidden)
         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
@@ -79,5 +79,5 @@ struct BudgetCategorySectionView: View {
 
 #Preview {
     @Previewable @State var isExpanded = true
-    BudgetCategorySectionView(categoryName: "Test Category", budgetItems: [], isExpanded: $isExpanded, onDeleteItem: {_ in })
+    BudgetCategorySectionView(categoryName: "Test Category", budgetItems: Budget.forPreview.items, isExpanded: $isExpanded, onDeleteItem: {_ in })
 }

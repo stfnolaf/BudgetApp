@@ -73,6 +73,8 @@ struct ContentView: View {
 }
 
 #Preview {
+    @Previewable @State var appState = AppState()
     return ContentView()
+        .environment(appState)
         .modelContainer(.forPreview)
 }

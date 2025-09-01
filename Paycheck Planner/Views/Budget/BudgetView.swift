@@ -19,10 +19,11 @@ struct BudgetView: View {
     @State private var showNewExpenseSheet: Bool = false
     
     var body: some View {
+        let categories = categories.sorted(by: {budget.categoricalBudgetedExpenses(for: $0, frequency: .monthly) > budget.categoricalBudgetedExpenses(for: $1, frequency: .monthly)})
         VStack(alignment: .center, spacing: 0) {
             ScrollView {
-                LazyVStack(alignment: .center, spacing: 20) {
-                    ForEach(categories.sorted(by: {budget.categoricalBudgetedExpenses(for: $0, frequency: .monthly) > budget.categoricalBudgetedExpenses(for: $1, frequency: .monthly) }), id: \.self) { category in
+                LazyVStack(alignment: .center, spacing: 0) {
+                    ForEach(categories, id: \.self) { category in
                         let itemsForCategory = budget.items.filter {$0.category == category}
                         BudgetCategorySectionView(
                             categoryName: category.name,
@@ -41,6 +42,9 @@ struct BudgetView: View {
                                 
                             }
                         )
+                        if(category.id != categories.last?.id) {
+                            Divider()
+                        }
                     }
                 }
                 .padding()
