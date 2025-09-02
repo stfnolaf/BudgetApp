@@ -41,7 +41,6 @@ struct BudgetCategorySectionView: View {
             }
 
             if isExpanded {
-                Divider().padding(.vertical, 4)
                 if budgetItems.isEmpty {
                     Text("No expenses in this category")
                         .foregroundColor(.secondary)
@@ -55,7 +54,7 @@ struct BudgetCategorySectionView: View {
                                 .foregroundColor(.secondary)
                         }
                         .padding(.leading)
-                        .padding(6)
+                        .padding(8)
                     }
                     .onDelete(perform: onDeleteItem)
                 }

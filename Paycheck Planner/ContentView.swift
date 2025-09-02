@@ -60,13 +60,11 @@ struct ContentView: View {
             let utilities = ExpenseCategory(name: "Utilities")
             let transport = ExpenseCategory(name: "Transport")
             let groceries = ExpenseCategory(name: "Groceries")
-            let splurge = ExpenseCategory(name: "Splurge")
             
             modelContext.insert(rent)
             modelContext.insert(utilities)
             modelContext.insert(transport)
             modelContext.insert(groceries)
-            modelContext.insert(splurge)
             didSetupDefaults = true
         }
     }

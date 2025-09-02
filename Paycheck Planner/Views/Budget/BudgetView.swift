@@ -25,29 +25,30 @@ struct BudgetView: View {
                 LazyVStack(alignment: .center, spacing: 0) {
                     ForEach(categories, id: \.self) { category in
                         let itemsForCategory = budget.items.filter {$0.category == category}
-                        BudgetCategorySectionView(
-                            categoryName: category.name,
-                            budgetItems: itemsForCategory,
-                            isExpanded: Binding(
-                                get: { expandedCategories.contains(category.name) },
-                                set: { isExpanded in
-                                    if isExpanded {
-                                        expandedCategories.insert(category.name)
-                                    } else {
-                                        expandedCategories.remove(category.name)
+                        if !itemsForCategory.isEmpty {
+                            BudgetCategorySectionView(
+                                categoryName: category.name,
+                                budgetItems: itemsForCategory,
+                                isExpanded: Binding(
+                                    get: { expandedCategories.contains(category.name) },
+                                    set: { isExpanded in
+                                        if isExpanded {
+                                            expandedCategories.insert(category.name)
+                                        } else {
+                                            expandedCategories.remove(category.name)
+                                        }
                                     }
+                                ),
+                                onDeleteItem: { offsets in
+                                    
                                 }
-                            ),
-                            onDeleteItem: { offsets in
-                                
-                            }
-                        )
+                            )
+                        }
                         if(category.id != categories.last?.id) {
                             Divider()
                         }
                     }
                 }
-                .padding()
             }
             .background(.ultraThinMaterial)
             VStack {
