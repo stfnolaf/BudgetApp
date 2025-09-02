@@ -8,7 +8,6 @@ struct NewBudgetItemView: View {
     let onCreate: (String, Budget, ExpenseCategory, Double, BudgetItem.BudgetFrequency) -> Void
     
     // Environment
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     
     // States

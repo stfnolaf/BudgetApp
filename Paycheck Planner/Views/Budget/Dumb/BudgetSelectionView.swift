@@ -11,10 +11,8 @@ import SwiftData
 struct BudgetSelectionView: View {
     let budgets: [Budget]
     @Binding var showAddBudgetAlert: Bool
-    let onCreateNewBudget: ((String) -> Void)
+    let onSetBudget: ((Budget) -> Void)
 
-    @Environment(AppState.self) private var appState
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     
     @State private var newBudgetName = ""
@@ -36,24 +34,12 @@ struct BudgetSelectionView: View {
             .padding()
             List(budgets) { budget in
                 Button{
-                    appState.workingBudgetID = budget.id
+                    onSetBudget(budget)
                     dismiss()
                 } label: {
                     Text(budget.name)
                 }
             }
         }
-        .alert("New Budget", isPresented: $showAddBudgetAlert, actions: {
-            TextField("List Name", text: $newBudgetName)
-            Button("Create", action: {
-                onCreateNewBudget(newBudgetName)
-                newBudgetName = ""
-                showAddBudgetAlert = false
-            })
-            Button("Cancel", role: .cancel, action: {
-                newBudgetName = ""
-                showAddBudgetAlert = false
-            })
-        })
     }
 }
