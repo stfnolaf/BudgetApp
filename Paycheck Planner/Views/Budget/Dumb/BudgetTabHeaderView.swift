@@ -33,4 +33,5 @@ struct BudgetTabHeaderView: View {
 #Preview {
     @Previewable @State var showBudgetSelectionSheet: Bool = false
     BudgetTabHeaderView(title: "My Budget", showBudgetSelectionSheet: $showBudgetSelectionSheet)
+    Spacer()
 }

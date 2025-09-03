@@ -27,18 +27,18 @@ struct ContentView: View {
             OverviewView()
                 .tabItem { Label("Overview", systemImage: "chart.pie") }
                 .tag(Tab.overview)
+            IncomeView()
+                .tabItem { Label("Income", systemImage: "dollarsign.circle") }
+                .tag(Tab.income)
             BudgetTabView()
                 .tabItem { Label("Budget", systemImage: "list.bullet.rectangle") }
                 .tag(Tab.budget)
             ExpenseTrackingView()
-                .tabItem { Label("Track", systemImage: "creditcard") }
+                .tabItem { Label("Spend", systemImage: "creditcard") }
                 .tag(Tab.track)
             GrowView()
                 .tabItem { Label("Grow", systemImage: "chart.bar") }
                 .tag(Tab.grow)
-            IncomeView()
-                .tabItem { Label("Income", systemImage: "dollarsign.circle") }
-                .tag(Tab.income)
         }
         .onAppear(perform: setupDefaults)
         .onAppear(perform: loadWorkingBudget)

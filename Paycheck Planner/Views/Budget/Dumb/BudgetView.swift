@@ -1,5 +1,5 @@
 //
-//  SpendView.swift
+//  BudgetView2.swift
 //  Paycheck Planner
 //
 //  Created by Stephen O'Loughlin on 7/8/25.
@@ -20,62 +20,66 @@ struct BudgetView: View {
     
     var body: some View {
         let categories = categories.sorted(by: {budget.categoricalBudgetedExpenses(for: $0, frequency: .monthly) > budget.categoricalBudgetedExpenses(for: $1, frequency: .monthly)})
-        VStack(alignment: .center, spacing: 0) {
-            ScrollView {
-                LazyVStack(alignment: .center, spacing: 0) {
+        NavigationStack {
+            VStack(alignment: .center, spacing: 0) {
+                List {
                     ForEach(categories, id: \.self) { category in
                         let itemsForCategory = budget.items.filter {$0.category == category}
+                        let categoryTotal = itemsForCategory.reduce(0) {$0 + $1.convertedAmount(to: .monthly)}
                         if !itemsForCategory.isEmpty {
-                            BudgetCategorySectionView(
-                                categoryName: category.name,
-                                budgetItems: itemsForCategory,
-                                isExpanded: Binding(
-                                    get: { expandedCategories.contains(category.name) },
-                                    set: { isExpanded in
-                                        if isExpanded {
-                                            expandedCategories.insert(category.name)
-                                        } else {
-                                            expandedCategories.remove(category.name)
-                                        }
+                            NavigationLink(
+                                destination: BudgetCategoryDetailView(
+                                    categoryName: category.name,
+                                    categoryTotal: categoryTotal,
+                                    budgetItems: itemsForCategory,
+                                    onDeleteItem: {set in }
+                                )
+                                .toolbar {
+                                    ToolbarItem(placement: .principal) {
+                                        Text(category.name)
                                     }
-                                ),
-                                onDeleteItem: { offsets in
-                                    
                                 }
                             )
-                        }
-                        if(category.id != categories.last?.id) {
-                            Divider()
+                            {
+                                HStack {
+                                    Text(category.name)
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                    Spacer()
+                                    Text("$\(categoryTotal, specifier: "%.2f")")
+                                        .foregroundColor(.accentColor)
+                                }
+                                .padding(20)
+                            }
                         }
                     }
                 }
-            }
-            .background(.ultraThinMaterial)
-            VStack {
-                HStack {
-                    Text("Fixed Expenses")
-                        .font(.headline)
-                    Spacer()
-                    Text("$\(budget.totalBudgetedExpenses(frequency: .monthly), specifier: "%.2f")")
-                        .font(.headline)
-                        .foregroundColor(.accentColor)
-                }
-                .padding()
-                Button(action: {
-                    showNewExpenseSheet = true
-                }) {
+                VStack {
                     HStack {
-                        Image(systemName: "plus.circle.fill")
-                        Text("New Expense")
-                            .fontWeight(.semibold)
+                        Text("Fixed Expenses")
+                            .font(.headline)
+                        Spacer()
+                        Text("$\(budget.totalBudgetedExpenses(frequency: .monthly), specifier: "%.2f")")
+                            .font(.headline)
+                            .foregroundColor(.accentColor)
                     }
-                    .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color.accentColor.opacity(0.15))
-                    .cornerRadius(12)
+                    Button(action: {
+                        showNewExpenseSheet = true
+                    }) {
+                        HStack {
+                            Image(systemName: "plus.circle.fill")
+                            Text("New Expense")
+                                .fontWeight(.semibold)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.accentColor.opacity(0.15))
+                        .cornerRadius(12)
+                    }
+                    .padding(.horizontal)
+                    .padding(.bottom, 8)
                 }
-                .padding(.horizontal)
-                .padding(.bottom, 8)
             }
         }
         .sheet(isPresented: $showNewExpenseSheet) {
