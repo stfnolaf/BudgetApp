@@ -21,8 +21,4 @@ struct Paycheck_PlannerApp: App {
         }
         .modelContainer(for: [Budget.self, Expense.self])
     }
-    
-    init() {
-        
-    }
 }

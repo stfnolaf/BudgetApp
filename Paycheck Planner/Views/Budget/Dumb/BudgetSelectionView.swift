@@ -32,7 +32,7 @@ struct BudgetSelectionView: View {
                 }
             }
             .padding()
-            List(budgets) { budget in
+            List(budgets.sorted(by: {$0.name < $1.name})) { budget in
                 Button{
                     onSetBudget(budget)
                     dismiss()

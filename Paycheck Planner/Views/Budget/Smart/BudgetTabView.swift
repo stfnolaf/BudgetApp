@@ -21,11 +21,18 @@ struct BudgetTabView: View {
     
     // States
     @State private var showBudgetSelectionSheet = false
-    @State private var showAddBudgetAlert: Bool = false
+    @State private var showAddBudgetAlert: Bool = false {
+        didSet {
+            let _ = print ("Show Add Budget Alert: \(showAddBudgetAlert)")
+        }
+    }
     
     // Computed
     private var workingBudget: Budget? {
-        budgets.first {$0.id == appState.workingBudgetID}
+        let _ = print("Looking for \(String(describing: appState.workingBudgetID)) across \(budgets.count) budgets")
+        let ret = budgets.first {$0.id == appState.workingBudgetID}
+        let _ = print("Returning \(ret?.name ?? "Unknown")")
+        return ret
     }
 
     var body: some View {
@@ -38,12 +45,31 @@ struct BudgetTabView: View {
                     showBudgetSelectionSheet: $showBudgetSelectionSheet
                 )
             } else {
-                NoBudgetsView(showAddBudgetAlert: $showAddBudgetAlert, showBudgetSelectionSheet: $showBudgetSelectionSheet)
+                VStack {
+                    Spacer()
+                    Text("No budgets created yet!")
+                    Button(action: {
+                        showAddBudgetAlert = true
+                    }) {
+                        HStack {
+                            Image(systemName: "plus.circle.fill")
+                            Text("New Budget")
+                                .fontWeight(.semibold)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.accentColor.opacity(0.15))
+                        .cornerRadius(12)
+                    }
+                    .padding()
+                    Spacer()
+                }
             }
         }
         .sheet(isPresented: $showBudgetSelectionSheet) {
             BudgetSelectionView(budgets: budgets, showAddBudgetAlert: $showAddBudgetAlert, onSetBudget: setBudget)
         }
+        // TODO: need to not do this via an alert
         .alert("New Budget", isPresented: $showAddBudgetAlert, actions: {
             NewBudgetDialogView(onSetBudget: setBudget, onCreateNewBudget: createNewBudget, showAddBudgetAlert: $showAddBudgetAlert)
         })
@@ -60,6 +86,12 @@ struct BudgetTabView: View {
     private func createNewBudget(name: String) -> Budget {
         let newBudget = Budget(name: name)
         modelContext.insert(newBudget)
+        do {
+            try modelContext.save()
+        } catch {
+            // TODO: alert popup
+            print("Failed to save the new budget: \(error)")
+        }
         showAddBudgetAlert = false
         return newBudget
     }
@@ -74,5 +106,11 @@ struct BudgetTabView: View {
         
         newBudgetItem.budget = budget
         modelContext.insert(newBudgetItem)
+        do {
+            try modelContext.save()
+        } catch {
+            // TODO: alert popup
+            print("Failed to save the new budget item: \(error)")
+        }
     }
 }
