@@ -13,10 +13,12 @@ struct BudgetView: View {
     let budget: Budget
     let categories: [ExpenseCategory]
     let onAddBudgetItem: (String, Budget, ExpenseCategory, Double, BudgetItem.BudgetFrequency) -> Void
+    @Binding var showBudgetSelectionSheet: Bool
 
     // State
     @State private var expandedCategories: Set<String> = []
     @State private var showNewExpenseSheet: Bool = false
+    @State private var categoryIsPressed: Bool = false
     
     var body: some View {
         let categories = categories.sorted(by: {budget.categoricalBudgetedExpenses(for: $0, frequency: .monthly) > budget.categoricalBudgetedExpenses(for: $1, frequency: .monthly)})
@@ -81,6 +83,38 @@ struct BudgetView: View {
                     .padding(.bottom, 8)
                 }
             }
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    HStack {
+                        Text(budget.name)
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        Image(systemName: "chevron.down")
+                            .font(.footnote)
+                    }
+                    .foregroundStyle(categoryIsPressed ? .gray : .primary)
+                    .animation(.easeInOut(duration: 0.1), value: categoryIsPressed)
+                    .onTapGesture {
+                        showBudgetSelectionSheet = true
+                    }
+                    .simultaneousGesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { _ in
+                                categoryIsPressed = true
+                            }
+                            .onEnded { _ in
+                                categoryIsPressed = false
+                            }
+                    )
+                }
+//                ToolbarItem(placement: .navigationBarTrailing) {
+//                    Button(action: {
+//                        showBudgetSelectionSheet = true
+//                    }) {
+//                        Image(systemName: "list.bullet")
+//                    }
+//                }
+            }
         }
         .sheet(isPresented: $showNewExpenseSheet) {
             NewBudgetItemView(budget: budget, categories: categories, onCreate: onAddBudgetItem)
@@ -89,6 +123,7 @@ struct BudgetView: View {
 }
 
 #Preview {
+    @Previewable @State var showBudgetSelectionSheet: Bool = false
     ({
         let budget = Budget.forPreview
         var categories: [ExpenseCategory] = []
@@ -97,6 +132,6 @@ struct BudgetView: View {
                 categories.append(item.category)
             }
         }
-        return BudgetView(budget: budget, categories: categories, onAddBudgetItem: { name, budget, category, amount, frequency in })
+        return BudgetView(budget: budget, categories: categories, onAddBudgetItem: { name, budget, category, amount, frequency in }, showBudgetSelectionSheet: $showBudgetSelectionSheet)
     })()
 }

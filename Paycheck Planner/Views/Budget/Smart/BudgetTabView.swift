@@ -30,12 +30,12 @@ struct BudgetTabView: View {
 
     var body: some View {
         VStack {
-            BudgetTabHeaderView(title: workingBudget?.name ?? "No Budget Selected", showBudgetSelectionSheet: $showBudgetSelectionSheet)
             if let workingBudget {
                 BudgetView(
                     budget: workingBudget,
                     categories: categories,
-                    onAddBudgetItem: createNewBudgetItem
+                    onAddBudgetItem: createNewBudgetItem,
+                    showBudgetSelectionSheet: $showBudgetSelectionSheet
                 )
             } else {
                 NoBudgetsView(showAddBudgetAlert: $showAddBudgetAlert, showBudgetSelectionSheet: $showBudgetSelectionSheet)
