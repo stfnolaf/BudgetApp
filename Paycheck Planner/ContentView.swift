@@ -45,14 +45,20 @@ struct ContentView: View {
     }
     
     private func loadWorkingBudget() {
-        guard !budgets.isEmpty else {return}
-        
-        let isInvalidID = appState.workingBudgetID == nil || !budgets.contains(where: { $0.id == appState.workingBudgetID! })
-        
-        if isInvalidID {
+        guard !budgets.isEmpty else {
+            appState.workingBudgetID = nil
+            return
+        }
+
+        let loadedID = AppDefaults.loadWorkingBudgetID()
+
+        if budgets.contains(where: { $0.id == loadedID }) {
+            appState.workingBudgetID = loadedID
+        } else {
             appState.workingBudgetID = budgets.first?.id
         }
     }
+
     
     private func setupDefaults() {
         if !didSetupDefaults {
