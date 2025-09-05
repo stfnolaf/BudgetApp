@@ -21,17 +21,11 @@ struct BudgetTabView: View {
     
     // States
     @State private var showBudgetSelectionSheet = false
-    @State private var showAddBudgetAlert: Bool = false {
-        didSet {
-            let _ = print ("Show Add Budget Alert: \(showAddBudgetAlert)")
-        }
-    }
+    @State private var showAddBudgetAlert: Bool = false
     
     // Computed
     private var workingBudget: Budget? {
-        let _ = print("Looking for \(String(describing: appState.workingBudgetID)) across \(budgets.count) budgets")
         let ret = budgets.first {$0.id == appState.workingBudgetID}
-        let _ = print("Returning \(ret?.name ?? "Unknown")")
         return ret
     }
 

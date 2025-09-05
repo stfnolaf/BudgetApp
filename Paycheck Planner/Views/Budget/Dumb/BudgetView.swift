@@ -16,52 +16,80 @@ struct BudgetView: View {
     @Binding var showBudgetSelectionSheet: Bool
 
     // State
-    @State private var expandedCategories: Set<String> = []
     @State private var showNewExpenseSheet: Bool = false
-    @State private var categoryIsPressed: Bool = false
+    @State private var expandedCategories: Set<String> = []
+    private let period: BudgetItem.BudgetFrequency = .monthly
     
     var body: some View {
-        let categories = categories.sorted(by: {budget.categoricalBudgetedExpenses(for: $0, frequency: .monthly) > budget.categoricalBudgetedExpenses(for: $1, frequency: .monthly)})
+        let categories = categories.sorted(by: {budget.categoricalBudgetedExpenses(for: $0, frequency: period) > budget.categoricalBudgetedExpenses(for: $1, frequency: period)}).filter { $0.budgetItems.isEmpty == false }
         NavigationStack {
             VStack(alignment: .center, spacing: 0) {
-                List {
-                    ForEach(categories, id: \.self) { category in
-                        let itemsForCategory = budget.items.filter {$0.category == category}
-                        let categoryTotal = itemsForCategory.reduce(0) {$0 + $1.convertedAmount(to: .monthly)}
-                        if !itemsForCategory.isEmpty {
-                            NavigationLink(
-                                destination: BudgetCategoryDetailView(
-                                    categoryName: category.name,
-                                    categoryTotal: categoryTotal,
-                                    budgetItems: itemsForCategory,
-                                    onDeleteItem: {set in }
-                                )
-                                .toolbar {
-                                    ToolbarItem(placement: .principal) {
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(categories) { category in
+                            let itemsForCategory = category.budgetItems.sorted(by: {$0.convertedAmount(to: period) > $1.convertedAmount(to: period)})
+                            let categoryTotal = itemsForCategory.reduce(0) {$0 + $1.convertedAmount(to: period)}
+                                
+                            let isExpanded = expandedCategories.contains(category.name)
+                            
+                            Grid(alignment: .leading, horizontalSpacing: 8, verticalSpacing: 12) {
+                                GridRow {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "chevron.right")
+                                            .font(.system(size: 12, weight: .semibold))
+                                            .foregroundColor(.secondary)
+                                            .rotationEffect(.degrees(isExpanded ? 90: 0))
+                                            .padding(.trailing, 8)
+                                        
                                         Text(category.name)
+                                            .font(.title3)
+                                            .bold()
+                                    }
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    Text(String(format: "$%.2f", categoryTotal))
+                                        .font(.headline)
+                                        .foregroundColor(.accentColor)
+                                        .gridColumnAlignment(.trailing)
+                                }
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    withAnimation(.easeInOut(duration: 0.25)) {
+                                        if isExpanded {
+                                            expandedCategories.remove(category.name)
+                                        } else {
+                                            expandedCategories.insert(category.name)
+                                        }
                                     }
                                 }
-                            )
-                            {
-                                HStack {
-                                    Text(category.name)
-                                        .font(.headline)
-                                        .foregroundColor(.primary)
-                                    Spacer()
-                                    Text("$\(categoryTotal, specifier: "%.2f")")
-                                        .foregroundColor(.accentColor)
+                                
+                                if isExpanded {
+                                    ForEach(itemsForCategory) { item in
+                                        GridRow {
+                                            Text(item.name)
+                                                .padding(.leading, 25)
+                                            Text(String(format: "$%.2f", item.amount))
+                                                .gridColumnAlignment(.trailing)
+                                        }
+                                        .transition(.move(edge: .top).combined(with: .opacity))
+                                    }
                                 }
-                                .padding(20)
+                            }
+                            .padding(.vertical, 20)
+                            
+                            if category.name != categories.last?.name {
+                                Divider()
                             }
                         }
                     }
                 }
+                .padding(.horizontal)
+                .background(.ultraThinMaterial)
                 VStack {
                     HStack {
                         Text("Fixed Expenses")
                             .font(.headline)
                         Spacer()
-                        Text("$\(budget.totalBudgetedExpenses(frequency: .monthly), specifier: "%.2f")")
+                        Text("$\(budget.totalBudgetedExpenses(frequency: period), specifier: "%.2f")")
                             .font(.headline)
                             .foregroundColor(.accentColor)
                     }
@@ -85,35 +113,26 @@ struct BudgetView: View {
             }
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    HStack {
-                        Text(budget.name)
-                            .font(.title2)
-                            .fontWeight(.bold)
-                        Image(systemName: "chevron.down")
-                            .font(.footnote)
-                    }
-                    .foregroundStyle(categoryIsPressed ? .gray : .primary)
-                    .animation(.easeInOut(duration: 0.1), value: categoryIsPressed)
-                    .onTapGesture {
-                        showBudgetSelectionSheet = true
-                    }
-                    .simultaneousGesture(
-                        DragGesture(minimumDistance: 0)
-                            .onChanged { _ in
-                                categoryIsPressed = true
-                            }
-                            .onEnded { _ in
-                                categoryIsPressed = false
-                            }
-                    )
+                    Text(budget.name)
+                        .font(.title2)
+                        .fontWeight(.bold)
                 }
-//                ToolbarItem(placement: .navigationBarTrailing) {
-//                    Button(action: {
-//                        showBudgetSelectionSheet = true
-//                    }) {
-//                        Image(systemName: "list.bullet")
-//                    }
-//                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Menu {
+                        Button(action: {
+                            print("Options selected")
+                        }) {
+                            Label("Options", systemImage: "slider.horizontal.3")
+                        }
+                        Button(action: {
+                            print("Manage Budgets")
+                        }) {
+                            Label("Manage Budgets", systemImage: "list.bullet.rectangle.portrait.fill")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                    }
+                }
             }
         }
         .sheet(isPresented: $showNewExpenseSheet) {

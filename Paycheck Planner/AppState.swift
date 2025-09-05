@@ -12,7 +12,6 @@ import SwiftData
 @Observable class AppState {
     var workingBudgetID: PersistentIdentifier? {
         didSet {
-            let _ = print("Updated workingBudgetID!")
             if let budgetID = workingBudgetID {
                 AppDefaults.saveWorkingBudgetID(budgetID)
             } else {

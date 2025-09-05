@@ -40,8 +40,12 @@ struct ContentView: View {
                 .tabItem { Label("Grow", systemImage: "chart.bar") }
                 .tag(Tab.grow)
         }
-        .onAppear(perform: setupDefaults)
-        .onAppear(perform: loadWorkingBudget)
+        .onAppear(perform: appLaunchSetup)
+    }
+    
+    private func appLaunchSetup() {
+        setupDefaults()
+        loadWorkingBudget()
     }
     
     private func loadWorkingBudget() {
