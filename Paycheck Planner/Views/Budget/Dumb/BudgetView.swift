@@ -13,12 +13,13 @@ struct BudgetView: View {
     let budget: Budget
     let categories: [ExpenseCategory]
     let onAddBudgetItem: (String, Budget, ExpenseCategory, Double, BudgetItem.BudgetFrequency) -> Void
+    let onDeleteBudgetItem: (BudgetItem) -> Void
     @Binding var showBudgetSelectionSheet: Bool
 
     // State
     @State private var showNewExpenseSheet: Bool = false
     @State private var expandedCategories: Set<String> = []
-    private let period: BudgetItem.BudgetFrequency = .monthly
+    @State private var period: BudgetItem.BudgetFrequency = .monthly
     
     var body: some View {
         let categories = categories.sorted(by: {budget.categoricalBudgetedExpenses(for: $0, frequency: period) > budget.categoricalBudgetedExpenses(for: $1, frequency: period)}).filter { $0.budgetItems.isEmpty == false }
@@ -70,7 +71,17 @@ struct BudgetView: View {
                                             Text(String(format: "$%.2f", item.amount))
                                                 .gridColumnAlignment(.trailing)
                                         }
+                                        .contentShape(Rectangle())
                                         .transition(.move(edge: .top).combined(with: .opacity))
+                                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                            Button(role: .destructive) {
+                                                withAnimation {
+                                                    onDeleteBudgetItem(item)
+                                                }
+                                            } label: {
+                                                Label("Delete", systemImage: "trash.fill")
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -151,6 +162,6 @@ struct BudgetView: View {
                 categories.append(item.category)
             }
         }
-        return BudgetView(budget: budget, categories: categories, onAddBudgetItem: { name, budget, category, amount, frequency in }, showBudgetSelectionSheet: $showBudgetSelectionSheet)
+        return BudgetView(budget: budget, categories: categories, onAddBudgetItem: { name, budget, category, amount, frequency in }, onDeleteBudgetItem: {_ in }, showBudgetSelectionSheet: $showBudgetSelectionSheet)
     })()
 }

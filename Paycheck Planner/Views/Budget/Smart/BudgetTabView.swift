@@ -36,6 +36,7 @@ struct BudgetTabView: View {
                     budget: workingBudget,
                     categories: categories,
                     onAddBudgetItem: createNewBudgetItem,
+                    onDeleteBudgetItem: deleteBudgetItem,
                     showBudgetSelectionSheet: $showBudgetSelectionSheet
                 )
             } else {
@@ -69,12 +70,8 @@ struct BudgetTabView: View {
         })
     }
     
-    private func deleteBudgetItem(at offsets: IndexSet, in category: ExpenseCategory, for budget: Budget) {
-        let itemsForCategory = budget.items.filter { $0.category == category }
-        for index in offsets {
-            let itemToDelete = itemsForCategory[index]
-            modelContext.delete(itemToDelete)
-        }
+    private func deleteBudgetItem(_ item: BudgetItem) {
+        modelContext.delete(item)
     }
     
     private func createNewBudget(name: String) -> Budget {
