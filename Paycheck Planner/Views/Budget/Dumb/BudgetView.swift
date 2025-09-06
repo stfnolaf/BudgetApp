@@ -8,6 +8,17 @@
 import SwiftUI
 import SwiftData
 
+// Defines a new vertical alignment line named "amount" for our views to follow.
+extension HorizontalAlignment {
+    private enum AmountAlignment : AlignmentID {
+        static func defaultValue(in context: ViewDimensions) -> CGFloat {
+            // Default to aligning with the trailing edge.
+            return context[HorizontalAlignment.trailing]
+        }
+    }
+    static let amount = HorizontalAlignment(AmountAlignment.self)
+}
+
 struct BudgetView: View {
     // Inputs
     let budget: Budget
@@ -24,70 +35,58 @@ struct BudgetView: View {
     var body: some View {
         let categories = categories.sorted(by: {budget.categoricalBudgetedExpenses(for: $0, frequency: period) > budget.categoricalBudgetedExpenses(for: $1, frequency: period)}).filter { $0.budgetItems.isEmpty == false }
         NavigationStack {
-            VStack(alignment: .center, spacing: 0) {
+            VStack(alignment: .amount, spacing: 0) {
                 ScrollView {
                     LazyVStack(spacing: 0) {
                         ForEach(categories) { category in
                             let itemsForCategory = category.budgetItems.sorted(by: {$0.convertedAmount(to: period) > $1.convertedAmount(to: period)})
                             let categoryTotal = itemsForCategory.reduce(0) {$0 + $1.convertedAmount(to: period)}
                                 
-                            let isExpanded = expandedCategories.contains(category.name)
                             
-                            Grid(alignment: .leading, horizontalSpacing: 8, verticalSpacing: 12) {
-                                GridRow {
-                                    HStack(spacing: 4) {
-                                        Image(systemName: "chevron.right")
-                                            .font(.system(size: 12, weight: .semibold))
-                                            .foregroundColor(.secondary)
-                                            .rotationEffect(.degrees(isExpanded ? 90: 0))
-                                            .padding(.trailing, 8)
-                                        
-                                        Text(category.name)
-                                            .font(.title3)
-                                            .bold()
-                                    }
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    Text(String(format: "$%.2f", categoryTotal))
-                                        .font(.headline)
-                                        .foregroundColor(.accentColor)
-                                        .gridColumnAlignment(.trailing)
-                                }
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    withAnimation(.easeInOut(duration: 0.25)) {
-                                        if isExpanded {
-                                            expandedCategories.remove(category.name)
-                                        } else {
-                                            expandedCategories.insert(category.name)
-                                        }
-                                    }
-                                }
-                                
-                                if isExpanded {
-                                    ForEach(itemsForCategory) { item in
-                                        GridRow {
-                                            Text(item.name)
-                                                .padding(.leading, 25)
-                                            Text(String(format: "$%.2f", item.amount))
-                                                .gridColumnAlignment(.trailing)
-                                        }
-                                        .contentShape(Rectangle())
-                                        .transition(.move(edge: .top).combined(with: .opacity))
-                                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                            Button(role: .destructive) {
-                                                withAnimation {
-                                                    onDeleteBudgetItem(item)
-                                                }
-                                            } label: {
-                                                Label("Delete", systemImage: "trash.fill")
-                                            }
-                                        }
-                                    }
+                            HStack {
+                                Image(systemName: "chevron.right")
+                                    .font(.caption.weight(.bold))
+                                    .rotationEffect(.degrees(isExpanded(category) ? 90 : 0))
+                                Text(category.name)
+                                    .font(.headline)
+                                Spacer()
+                                Text(categoryTotal, format: .currency(code: "USD"))
+                                    .font(.headline)
+                                    .alignmentGuide(.amount) { d in d[HorizontalAlignment.trailing] }
+                            }
+                            .padding()
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                withAnimation(.easeInOut(duration: 0.25)) {
+                                    toggleExpansion(for: category)
                                 }
                             }
-                            .padding(.vertical, 20)
                             
-                            if category.name != categories.last?.name {
+                            if isExpanded(category) {
+                                ForEach(itemsForCategory) { item in
+                                    HStack {
+                                        Text(item.name)
+                                            .padding(.leading, 30)
+                                        Spacer()
+                                        Text(item.amount, format: .currency(code: "USD"))
+                                            .alignmentGuide(.amount) { d in d[HorizontalAlignment.trailing] }
+                                    }
+                                    .padding(.horizontal)
+                                    .padding(.vertical, 8)
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                    .contentShape(Rectangle())
+                                    .swipeActions(allowsFullSwipe: false) {
+                                        Button(role: .destructive) {
+                                            onDeleteBudgetItem(item)
+                                        } label: {
+                                            Label("Delete", systemImage: "trash.fill")
+                                        }
+                                    }
+                                    .transition(.move(edge: .top).combined(with: .opacity))
+                                }
+                            }
+                            if(category.name != categories.last?.name) {
                                 Divider()
                             }
                         }
@@ -148,6 +147,18 @@ struct BudgetView: View {
         }
         .sheet(isPresented: $showNewExpenseSheet) {
             NewBudgetItemView(budget: budget, categories: categories, onCreate: onAddBudgetItem)
+        }
+    }
+    
+    private func isExpanded(_ category: ExpenseCategory) -> Bool {
+        expandedCategories.contains(category.name)
+    }
+    
+    private func toggleExpansion(for category: ExpenseCategory) {
+        if isExpanded(category) {
+            expandedCategories.remove(category.name)
+        } else {
+            expandedCategories.insert(category.name)
         }
     }
 }
