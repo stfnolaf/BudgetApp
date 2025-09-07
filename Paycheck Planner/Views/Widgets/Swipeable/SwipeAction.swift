@@ -37,9 +37,9 @@ struct SwipeAction: View {
                     .background(color)
                     .clipShape(Circle())
             }
-            .scaleEffect(progress)
-            .rotationEffect(.degrees(90 * (1 - Double(progress))))
-            .animation(.spring(response: 0.4, dampingFraction: 0.6), value: progress)
+            //.scaleEffect(progress)
+            //.rotationEffect(.degrees(90 * (1 - Double(progress))))
+            //.animation(.spring(response: 0.4, dampingFraction: 0.6), value: progress)
             .frame(width: buttonWidth)
         }
         .frame(width: buttonWidth)

@@ -72,9 +72,6 @@ struct SwipeTestView: View {
     }
 }
 
-// MARK: - Preview Provider
-struct SwipeTestView_Previews: PreviewProvider {
-    static var previews: some View {
-        SwipeTestView()
-    }
+#Preview {
+    SwipeTestView()
 }

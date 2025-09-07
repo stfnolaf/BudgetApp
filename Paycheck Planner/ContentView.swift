@@ -23,24 +23,25 @@ struct ContentView: View {
     @State private var selectedTab: Tab = .overview
     
     var body: some View {
-        TabView(selection: $selectedTab) {
-            OverviewView()
-                .tabItem { Label("Overview", systemImage: "chart.pie") }
-                .tag(Tab.overview)
-            IncomeView()
-                .tabItem { Label("Income", systemImage: "dollarsign.circle") }
-                .tag(Tab.income)
-            BudgetTabView()
-                .tabItem { Label("Budget", systemImage: "list.bullet.rectangle") }
-                .tag(Tab.budget)
-            ExpenseTrackingView()
-                .tabItem { Label("Spend", systemImage: "creditcard") }
-                .tag(Tab.track)
-            GrowView()
-                .tabItem { Label("Grow", systemImage: "chart.bar") }
-                .tag(Tab.grow)
-        }
-        .onAppear(perform: appLaunchSetup)
+        SwipeTestView()
+//        TabView(selection: $selectedTab) {
+//            OverviewView()
+//                .tabItem { Label("Overview", systemImage: "chart.pie") }
+//                .tag(Tab.overview)
+//            IncomeView()
+//                .tabItem { Label("Income", systemImage: "dollarsign.circle") }
+//                .tag(Tab.income)
+//            BudgetTabView()
+//                .tabItem { Label("Budget", systemImage: "list.bullet.rectangle") }
+//                .tag(Tab.budget)
+//            ExpenseTrackingView()
+//                .tabItem { Label("Spend", systemImage: "creditcard") }
+//                .tag(Tab.track)
+//            GrowView()
+//                .tabItem { Label("Grow", systemImage: "chart.bar") }
+//                .tag(Tab.grow)
+//        }
+//        .onAppear(perform: appLaunchSetup)
     }
     
     private func appLaunchSetup() {

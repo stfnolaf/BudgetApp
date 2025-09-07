@@ -12,7 +12,8 @@ struct SwipeableCell<Content: View>: View {
     let actions: [SwipeAction]
     
     @State private var horizontalOffset: CGFloat = 0
-    @GestureState private var dragOffset: CGFloat = 0
+    @State private var dragOffset: CGFloat = 0
+    @State private var isOpen: Bool = false
     @State private var actionsWidth: CGFloat = 0
         
     init(
@@ -25,11 +26,11 @@ struct SwipeableCell<Content: View>: View {
 
     var body: some View {
         ZStack(alignment: .trailing) {
-            actionsView(with: horizontalOffset)
+            actionsView(with: horizontalOffset + dragOffset)
                 .zIndex(0)
 
             contentView
-                .offset(x: horizontalOffset)
+                .offset(x: horizontalOffset + dragOffset)
                 .gesture(dragGesture)
                 .zIndex(1)
         }
@@ -57,7 +58,7 @@ struct SwipeableCell<Content: View>: View {
                 }
             }
         )
-        .environment(\.swipeOffset, horizontalOffset)
+        .environment(\.swipeOffset, offset)
         .environment(\.swipeTotalWidth, actionsWidth)
     }
     
@@ -74,29 +75,64 @@ struct SwipeableCell<Content: View>: View {
     
     private var dragGesture: some Gesture {
         DragGesture(minimumDistance: 20)
-            .updating($dragOffset) { value, state, _ in
-                state = value.translation.width
+            .onChanged { value in
+                let targetOffset = value.translation.width
+                let currentOffset = self.dragOffset
+                
+                let lagFactor: CGFloat = 0.7
+                
+                // Apply linear interpolation to smoothly move towards the target.
+                var newDragOffset = currentOffset + (targetOffset - currentOffset) * lagFactor
+
+                // --- ADDED: Clamp the motion to prevent dragging to the right ---
+                // Calculate the potential total visual offset
+                let potentialTotalOffset = self.horizontalOffset + newDragOffset
+                
+                // If the cell tries to move to the right of its resting position (0),
+                // correct the drag offset to prevent it.
+                if potentialTotalOffset > 0 {
+                    newDragOffset = -self.horizontalOffset
+                }
+                
+                self.dragOffset = newDragOffset
             }
             .onEnded { value in
-                let finalOffset = horizontalOffset + value.translation.width
+                // Decision logic should use the raw finger position, not the smoothed one.
+                let finalRawOffset = self.horizontalOffset + value.translation.width
                 let velocityX = value.predictedEndLocation.x - value.location.x
-                if finalOffset < -actionsWidth / 2 || velocityX < -50 {
-                    openCell()
+                
+                // Commit the final smoothed visual position to the permanent state.
+                self.horizontalOffset += self.dragOffset
+                // Reset the transient drag offset for the next gesture.
+                self.dragOffset = 0
+                
+                if !self.isOpen {
+                    if finalRawOffset < -self.actionsWidth / 2 || velocityX < -50 {
+                        self.openCell()
+                    } else {
+                        self.closeCell()
+                    }
                 } else {
-                    closeCell()
+                    if finalRawOffset > -self.actionsWidth / 2 || velocityX > 50 {
+                        self.closeCell()
+                    } else {
+                        self.openCell()
+                    }
                 }
             }
     }
     
     private func openCell() {
-        withAnimation(.spring()) {
+        self.isOpen = true
+        withAnimation(.smooth()) {
             horizontalOffset = -actionsWidth
         }
         NotificationCenter.default.post(name: .swipeableCellDidOpen, object: id)
     }
 
     private func closeCell() {
-        withAnimation(.spring()) {
+        self.isOpen = false
+        withAnimation(.smooth()) {
             horizontalOffset = 0
         }
     }
