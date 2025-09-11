@@ -7,13 +7,19 @@
 
 import SwiftUI
 
+extension Comparable {
+    func clamped(to limits: ClosedRange<Self>) -> Self {
+        return min(max(self, limits.lowerBound), limits.upperBound)
+    }
+}
+
 struct SwipeableCell<Content: View>: View {
     let content: Content
     let actions: [SwipeAction]
     
-    @State private var horizontalOffset: CGFloat = 0
+    @State private var cellPosition: CGFloat = 0
+    @State private var dragStartLocation: CGFloat = 0
     @State private var dragOffset: CGFloat = 0
-    @State private var isOpen: Bool = false
     @State private var actionsWidth: CGFloat = 0
         
     init(
@@ -26,16 +32,18 @@ struct SwipeableCell<Content: View>: View {
 
     var body: some View {
         ZStack(alignment: .trailing) {
-            actionsView(with: horizontalOffset + dragOffset)
+            let offset = (cellPosition + dragOffset).clamped(to: -actionsWidth...0)
+            
+            actionsView(with: offset)
                 .zIndex(0)
 
             contentView
-                .offset(x: horizontalOffset + dragOffset)
+                .offset(x: offset)
                 .gesture(dragGesture)
                 .zIndex(1)
         }
         .onReceive(NotificationCenter.default.publisher(for: .swipeableCellDidOpen)) { notification in
-            if let openedCellID = notification.object as? UUID, self.id != openedCellID {
+            if let openedCellID = notification.object as? UUID, id != openedCellID {
                 closeCell()
             }
         }
@@ -54,7 +62,7 @@ struct SwipeableCell<Content: View>: View {
         .background(
             GeometryReader { geometry in
                 Color.clear.onAppear {
-                    self.actionsWidth = geometry.size.width
+                    actionsWidth = geometry.size.width
                 }
             }
         )
@@ -67,73 +75,49 @@ struct SwipeableCell<Content: View>: View {
             .frame(maxWidth: .infinity)
             .background(Color(UIColor.systemBackground))
             .onTapGesture {
-                if horizontalOffset != 0 {
-                    closeCell()
-                }
+                closeCell()
             }
     }
     
     private var dragGesture: some Gesture {
-        DragGesture(minimumDistance: 20)
-            .onChanged { value in
-                let targetOffset = value.translation.width
-                let currentOffset = self.dragOffset
-                
-                let lagFactor: CGFloat = 0.7
-                
-                // Apply linear interpolation to smoothly move towards the target.
-                var newDragOffset = currentOffset + (targetOffset - currentOffset) * lagFactor
-
-                // --- ADDED: Clamp the motion to prevent dragging to the right ---
-                // Calculate the potential total visual offset
-                let potentialTotalOffset = self.horizontalOffset + newDragOffset
-                
-                // If the cell tries to move to the right of its resting position (0),
-                // correct the drag offset to prevent it.
-                if potentialTotalOffset > 0 {
-                    newDragOffset = -self.horizontalOffset
+        DragGesture(minimumDistance: 20, coordinateSpace: .local)
+            .onChanged() { value in
+                if dragStartLocation == 0 {
+                    dragStartLocation = value.translation.width
                 }
-                
-                self.dragOffset = newDragOffset
+                dragOffset = value.translation.width - dragStartLocation
             }
             .onEnded { value in
-                // Decision logic should use the raw finger position, not the smoothed one.
-                let finalRawOffset = self.horizontalOffset + value.translation.width
                 let velocityX = value.predictedEndLocation.x - value.location.x
-                
-                // Commit the final smoothed visual position to the permanent state.
-                self.horizontalOffset += self.dragOffset
-                // Reset the transient drag offset for the next gesture.
-                self.dragOffset = 0
-                
-                if !self.isOpen {
-                    if finalRawOffset < -self.actionsWidth / 2 || velocityX < -50 {
-                        self.openCell()
-                    } else {
-                        self.closeCell()
+                let velocityThreshold = 50.0
+                if abs(velocityX) > velocityThreshold {
+                    if velocityX < 0 {
+                        openCell()
+                    } else if velocityX > 0 {
+                        closeCell()
                     }
                 } else {
-                    if finalRawOffset > -self.actionsWidth / 2 || velocityX > 50 {
-                        self.closeCell()
+                    if cellPosition + dragOffset < -actionsWidth / 2 {
+                        openCell()
                     } else {
-                        self.openCell()
+                        closeCell()
                     }
                 }
+                dragOffset = 0
+                dragStartLocation = 0
             }
     }
     
     private func openCell() {
-        self.isOpen = true
-        withAnimation(.smooth()) {
-            horizontalOffset = -actionsWidth
-        }
         NotificationCenter.default.post(name: .swipeableCellDidOpen, object: id)
+        withTransaction(Transaction(animation: .easeOut(duration: 0.3))) {
+            cellPosition = -actionsWidth
+        }
     }
 
     private func closeCell() {
-        self.isOpen = false
-        withAnimation(.smooth()) {
-            horizontalOffset = 0
+        withTransaction(Transaction(animation: .easeOut(duration: 0.3))) {
+            cellPosition = 0
         }
     }
 }
